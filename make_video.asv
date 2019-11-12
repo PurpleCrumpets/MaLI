@@ -7,7 +7,7 @@ function make_video(image_folder,frameRateInfo,project_name,target_folder)
 %
 % Tim Churchfield
 %
-% Last edited: 12/11/2019
+% Last edited: 30/08/2019
 
 
 %% Function Input Variables
@@ -166,47 +166,47 @@ disp(['Creating ' project_name '...']);
 % Get Directory Listing 
 
 % image types
-% imageType = {'ppm'; 'jpeg'; 'png'};
-% 
-% for i = 1:size(imageType,1)
-%   imageStruct = dir(fullfile(pathProject,'images',['*.', imageType{i}]));
-%   numFiles = length(imageStruct);
-% 
-%   if numFiles ~= 0
-%       imageType = imageType{i};
-%       break 
-%   end
-% end
+imageType = {'ppm'; 'jpeg'; 'png'};
+
+for i = 1:size(imageType,1)
+  imageStruct = dir(fullfile(pathProject,'images',['*.', imageType{i}]));
+  numFiles = length(imageStruct);
+
+  if numFiles ~= 0
+      imageType = imageType{i};
+      break 
+  end
+end
 
 
 % image types
 imageType = {'ppm'; 'jpeg'; 'png'};
 
 for i = 1:size(imageType,1)
-    dir_list = fullfile(image_folder, (['*.',imageType{i}]));
-    png_files = dir(dir_list);
-    num_files = length(png_files);
+  dir_list = fullfile(image_folder, (['*.',imageType{i}]));
+  png_files = dir(dir_list);
+  num_files = length(png_files);
 
-    if num_files ~= 0
-        imageType = imageType{i};
-        break 
-    end
+  if num_files ~= 0
+      imageType = imageType{i};
+      break 
+  end
 end
 
-if num_files == 0
+if num_files ~= 0
+      imageType = imageType{i};
+      break 
+  end
+
+
+
+dir_list = fullfile(image_folder, ('*.png'));
+png_files = dir(dir_list);
+if isempty(png_files)
     warning('No images found, failed to make video...');
-    return 
+    return
 end
-
-
-
-% dir_list = fullfile(image_folder, ('*.png'));
-% png_files = dir(dir_list);
-% if isempty(png_files)
-%     warning('No images found, failed to make video...');
-%     return
-% end
-% num_files = length(png_files);
+num_files = length(png_files);
 
 % Find leading repeating characters
 test = char(png_files.name);
@@ -217,7 +217,7 @@ common = png_files(1).name(1:test-1);
 
 % Obtaining timesteps from image file names
 image_names = {png_files.name};
-timesteps = regexp(image_names,['(?<=' common ')\d*(?=\.', imageType, ')'],'match')';
+timesteps = regexp(image_names,['(?<=' common ')\d*(?=\.png)'],'match')';
 timesteps = str2double(cat(1,timesteps{:}));
 
 % Sorting png_files by timestep 
