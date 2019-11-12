@@ -1,0 +1,117 @@
+### Input Parameters for LIGGGHTS Simulation
+#-------------------------------------------------------------------------------
+
+################################################################################
+## Simulation
+################################################################################
+variable simtype   string "i" # i = initialisation, r = restart
+variable walltime  string "200:00:00" # Max simulation runtime (hhh:mm:ss)
+variable simdim     equal 2   # Simulation dimensions, 2D (2) or 3D (3)
+variable periodicbb equal 1   # Only for 2D: sim 0/1 - non/periodic boundary box
+variable proc       equal 4   # Number of processing cores utilised
+variable autoproc   equal 1   # Auto set processor layout (yes = 1, no = 0)
+variable xproc      equal 0   # x-direction processor layout (0 for auto-assign)
+variable yproc      equal 0   # y-direction processor layout (0 for auto-assign)
+variable zproc      equal 0   # z-direction processor layout (0 for auto-assign)
+variable imaging    equal 3   # 1 = all, 0 = none, 2 = rotating, 3 = calibration
+
+# NOTE: The product of xproc, yproc, zproc should equal proc if autoproc 
+# is set to 0. Otherwise, the MATLAB input script will not be happy ;).
+# Walltime and proc are necessary for initialising a simulation using MATLAB.
+
+################################################################################ 
+## DEM Parameters
+################################################################################
+variable ts         equal 0.0000005 # Time-step size         (s)
+variable neighdim   equal 0.004     # Size of neighbour list (m)
+variable thermostep equal 0.040     # Thermo time-step       (s)
+
+################################################################################
+## Particle Insertion
+################################################################################
+variable insertionrate equal 2000  # (particles of one type/s)
+variable volfracglass  equal 0.5   # Volume fraction of glass in bed (-)
+variable volfracPP     equal 0.5   # Volume fraction of PP in bed    (-)
+variable fillingdegree equal 0.5 # Volume filling degree of drum   (-)
+variable porosity      equal 0.36  # Porosity of bed (0.36 = random packing) (-)
+
+################################################################################
+## Material Properties 
+################################################################################
+#-------------------------------------------------------------------------------
+# Radius
+variable radglass        equal 0.002  # Radius of glass particles (m)
+variable radPP           equal 0.002  # Radius of PP particles    (m)
+#-------------------------------------------------------------------------------
+# Density
+variable denglass        equal 2500   # Density of glass particles (kg/m^3)
+variable denPP           equal 900    # Density of PP particles    (kg/m^3)
+#-------------------------------------------------------------------------------
+# Young's Modulus
+variable ymglass         equal 65e9   # Young's Modulus of glass (Pa)
+variable ymPP            equal 1.3e9  # Young's Modulus of PP    (Pa)
+variable ymPMMA          equal 2.45e9 # Young's Modulus of PMMA  (Pa)
+#-------------------------------------------------------------------------------
+# Poisson's Ratio
+variable prglass         equal 0.22   # Poisson's Ratio of glass (-)
+variable prPP            equal 0.42   # Poisson's Ratio of PP    (-)
+variable prPMMA          equal 0.36   # Poisson's Ratio of PMMA  (-)
+#-------------------------------------------------------------------------------
+# Coefficient of Restitution (CoR)
+variable restglassglass  equal 0.8000 # glass-glass (-)
+variable restglassPP     equal 0.8000 # glass-PP    (-)
+variable restglassPMMA   equal 0.8000 # glass-PMMA  (-)
+variable restPPPP        equal 0.8000 # PP-PP       (-)
+variable restPPPMMA      equal 0.8000 # PP-PMMA     (-)
+variable restPMMAPMMA    equal 0.0501 # PMMA-PMMA   (-)
+#variable restPMMAPMMA    equal 0.8000 # PMMA-PMMA   (-)
+#-------------------------------------------------------------------------------
+# Coefficient of Static Friction (CoSF)
+variable frictglassglass equal 0.9000 # glass-glass (-)
+variable frictglassPP    equal 0.9000 # glass-PP    (-)
+variable frictglassPMMA  equal 0.9000 # glass-PMMA  (-)
+variable frictPPPP       equal 0.9000 # PP-PP       (-)
+variable frictPPPMMA     equal 0.9000 # PP-PMMA     (-)
+variable frictPMMAPMMA   equal 0.0000 # PMMA-PMMA   (-)
+#variable frictPMMAPMMA   equal 0.9000 # PMMA-PMMA   (-)
+#-------------------------------------------------------------------------------
+# Coefficient of Rolling Friction (CoRF)
+variable rollglassglass  equal 0.0050 # glass-glass (-)
+variable rollglassPP     equal 0.0050 # glass-PP    (-)
+variable rollglassPMMA   equal 0.0050 # glass-PMMA  (-)
+variable rollPPPP        equal 0.0050 # PP-PP       (-)
+variable rollPPPMMA      equal 0.0050 # PP-PMMA     (-)
+variable rollPMMAPMMA    equal 0.0000 # PMMA-PMMA   (-)
+#variable rollPMMAPMMA    equal 0.0050 # PMMA-PMMA   (-)
+
+################################################################################
+## Geometry
+################################################################################
+#-------------------------------------------------------------------------------
+# Sizing Domain
+variable lengthdrum3D    equal 0.300 # Length of '3D' drum       (m)
+variable lengthdrum2D    equal 0.020 # Length of '2D' drum       (m)
+variable widthdrum       equal 0.150 # O.D. of drum              (m)
+variable iddrum          equal 0.144 # I.D. of drum              (m)
+variable thickcap        equal 0.010 # Thickness of end caps     (m)
+#-------------------------------------------------------------------------------
+# Rotational Mixing of Drum
+variable rpmMix          equal 60.0 # rpm of drum during mixing      (rpm)
+variable numrotMix       equal 1
+#-------------------------------------------------------------------------------
+# Vibration of Drum
+variable xamplitude   equal 0.000  # x-direction amplitude      (m) (Don't use)
+variable yamplitude   equal 0.002  # y-direction amplitude      (m) 
+variable zamplitude   equal 0.000  # z-direction amplitude      (m) (Don't use)
+variable frequencyvib equal 010.0  # Frequency of oscillation   (Hz)
+#variable cyclevib     equal 10     # Number of vibration cycles (-)
+variable cyclevib     equal 1
+#-------------------------------------------------------------------------------
+# Other
+variable rottime      equal 2.00  # Rotation time to place drum flat (s)
+variable dividerspeed equal 0.050 # Linear velocity of divider       (m/s)
+
+################################################################################
+## Parameters from DEcalioc will be added below as appropriate
+################################################################################
+

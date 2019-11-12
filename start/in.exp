@@ -1,0 +1,324 @@
+### Restart File for experimentally ready apparatus
+
+
+### Importing Variables from inputs.text
+print "----> Importing Variables..."
+variable input file inputs.txt
+
+## Simulation
+next input
+variable simdim equal $(v_input)
+next input 
+next input
+variable autoproc string $(v_input)
+next input
+variable xproc equal $(v_input)
+next input
+variable yproc equal $(v_input)
+next input
+variable zproc equal $(v_input)
+
+## DEM Parameters
+next input
+variable ts equal $(v_input)
+next input
+variable neighdim equal $(v_input)
+next input
+variable thermostep equal $(v_input)
+
+
+## Particle Insertion
+next input
+variable insertionrate equal $(v_input)
+next input
+variable numglass equal $(v_input)
+next input
+variable numPP equal $(v_input)
+
+
+## Material Properties
+
+# Particle Radius
+next input
+variable radglass equal $(v_input)
+next input
+variable radPP equal $(v_input)
+
+# Particle Density
+next input
+variable denglass equal $(v_input)
+next input
+variable denPP equal $(v_input)
+
+# Young's Modulus
+next input
+variable ymglass equal $(v_input)
+next input
+variable ymPP equal $(v_input)
+next input
+variable ymPMMA equal $(v_input)
+
+# Poisson's Ratio
+next input
+variable prglass equal $(v_input)
+next input
+variable prPP equal $(v_input)
+next input
+variable prPMMA equal $(v_input)
+
+# Coefficient of Restitution (COR)
+next input
+variable restglassglass equal $(v_input)
+next input
+variable restglassPP equal $(v_input)
+next input
+variable restglassPMMA equal $(v_input)
+next input
+variable restPPPP equal $(v_input)
+next input
+variable restPPPMMA equal $(v_input)
+next input
+variable restPMMAPMMA equal $(v_input)
+
+# Coefficient of Friction (COF)
+next input
+variable frictglassglass equal $(v_input)
+next input
+variable frictglassPP equal $(v_input)
+next input
+variable frictglassPMMA equal $(v_input)
+next input
+variable frictPPPP equal $(v_input)
+next input
+variable frictPPPMMA equal $(v_input)
+next input
+variable frictPMMAPMMA equal $(v_input)
+
+# Coefficient of Rolling Friction (CRF)
+next input
+variable rollglassglass equal $(v_input)
+next input
+variable rollglassPP equal $(v_input)
+next input
+variable rollglassPMMA equal $(v_input)
+next input
+variable rollPPPP equal $(v_input)
+next input
+variable rollPPPMMA equal $(v_input)
+next input
+variable rollPMMAPMMA equal $(v_input)
+
+## Geometry
+
+# Sizing Domain
+next input
+variable lengthdrum equal $(v_input)
+next input
+variable widthdrum equal $(v_input)
+next input
+variable thickcap equal $(v_input)
+
+# Vibration of Drum
+next input
+variable xamplitude equal $(v_input)
+next input
+variable yamplitude equal $(v_input)
+next input
+variable zamplitude equal $(v_input)
+next input
+variable frequencyvib equal $(v_input)
+next input
+variable timevib equal $(v_input)
+next input
+variable cyclevib equal $(v_input)
+
+# Rotation of Drum
+next input
+variable angularaccel equal $(v_input)
+next input
+variable rpm equal $(v_input)
+next input
+variable numrot equal $(v_input)
+next input
+variable acctime equal $(v_input)
+
+# Other
+next input
+variable rottime equal $(v_input)
+next input
+variable dividerspeed equal $(v_input)
+
+
+
+### Initialisation
+read_restart restart/4_exp_ready.restart
+
+
+## Preliminaries
+newton	    off             # Off for DEM sim with only short-range interactions
+communicate single vel yes  # Style of inter-processor comms
+
+
+## Neighbour Listing
+neighbor     $(v_neighdim) bin # Size of neighbour list, default for SI 0.001 m.
+# Algorithm used to build list is bin, scales with # of atoms/# of processors
+neigh_modify delay 0 # How often neighbour list is calcuated
+
+
+
+### Setup (Property order --> glass, PP, PMMA)
+
+## Material and Interaction Properties
+fix m1 all property/global youngsModulus peratomtype &
+$(v_ymglass) $(v_ymPP) $(v_ymPMMA)
+
+fix m2 all property/global poissonsRatio peratomtype &
+$(v_prglass) $(v_prPP) $(v_prPMMA)
+
+fix m3 all property/global coefficientRestitution peratomtypepair 3 &
+$(v_restglassglass) $(v_restglassPP) $(v_restglassPMMA) $(v_restglassPP) & 
+$(v_restPPPP) $(v_restPPPMMA) $(v_restglassPMMA) $(v_restPPPMMA) &
+$(v_restPMMAPMMA)
+
+fix m4 all property/global coefficientFriction peratomtypepair 3 &
+$(v_frictglassglass) $(v_frictglassPP) $(v_frictglassPMMA) $(v_frictglassPP) & 
+$(v_frictPPPP) $(v_frictPPPMMA) $(v_frictglassPMMA) $(v_frictPPPMMA) &
+$(v_frictPMMAPMMA)
+
+fix m5 all property/global coefficientRollingFriction peratomtypepair 3 &
+$(v_rollglassglass) $(v_rollglassPP) $(v_rollglassPMMA) $(v_rollglassPP) & 
+$(v_rollPPPP) $(v_rollPPPMMA) $(v_rollglassPMMA) $(v_rollPPPMMA) &
+$(v_rollPMMAPMMA)
+
+hard_particles yes # Allow for Youngs Modulus > 1e9 Pa
+
+
+## Particle Insertion 
+fix pts1 all particletemplate/sphere 15485863 atom_type 1 density constant &
+$(v_denglass) radius constant $(v_radglass) # Glass particles
+fix pts2 all particletemplate/sphere 123457   atom_type 2 density constant &
+$(v_denPP)    radius constant $(v_radPP)    # PP particles
+
+
+## Import Mesh from CAD file as atom type 3 (PMMA)
+fix cad3 all mesh/surface file meshes/rotating_drum.stl &
+heal auto_remove_duplicates type 3 scale 0.001
+
+
+
+## Declaring Geometry as a Granular Wall
+fix geometry all wall/gran model hertz tangential history &
+rolling_friction cdt mesh n_meshes 1 meshes cad3
+
+
+## Defining Physics
+pair_style gran model hertz tangential history &
+rolling_friction cdt # Hertz without cohesion inc rolling friction
+pair_coeff * *       # Indicate all particles interact via granular potential
+
+
+## Detailed Settings
+
+# Integrator
+fix integrate all nve/sphere # Constant number, volume, energy
+
+# Gravity
+fix grav all gravity 9.81 vector 0.0 0.0 -1.0 # Gravity in z-direction
+
+# Time Step
+timestep $(v_ts) # less than, equal to 20% of Raleigh time step
+
+# Thermodynamic Output Settings
+variable        thermofreq equal ceil($(v_thermostep)/$(v_ts))
+compute		cp1 all erotate/sphere
+thermo_style	custom step atoms ke c_cp1 spcpu vol
+thermo          $(v_thermofreq)
+thermo_modify	lost warn norm no # Check for lost atoms, thermo not normalised
+
+# Grouping Particle Types
+group glass type 1
+group PP type 2
+
+
+variable atommod equal $(v_neighdim)/2
+atom_modify sort 1000 $(v_atommod)
+ 
+
+run 1
+
+# Initialising Dump Files
+dump dumpstl0 glass custom/vtk $(v_thermofreq) postexp/glass_particles_*.vtk &
+id type type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+dump dumpstl1 PP custom/vtk $(v_thermofreq) postexp/PP_particles_*.vtk &
+id type type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+dump dumpstl7 all mesh/stl $(v_thermofreq) postexp/dump_drum_*.stl cad3
+
+print "test3"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Accelerating Drum
+print "----> Accelerating Drum..."
+variable n equal 1000 # Breaking acceleration into sections
+variable LoopVar loop $n
+variable runsteps10 equal ceil($(v_acctime)/($n*$(v_ts)))
+
+# Acceleration Loop
+
+label loop2
+variable omegaiter equal ((PI*$(v_rpm))/30)*(($(v_LoopVar)/$n)*$(v_acctime))
+
+fix movecad10 all move/mesh mesh cad3 rotate/variable origin 0 0 0 axis 0 1 0 &
+omega v_omegaiter
+
+run $(v_runsteps10) post no
+
+unfix movecad10
+
+print  $(v_omegaiter)
+variable omegaiter delete
+
+next LoopVar
+jump in.rotatingdrum2D loop2
+label endloop2
+
+info communication time out log
+
+## Constant Rotation Speed 
+print "----> Rotating Drum at Constant Speed..."
+variable periodrot equal 60/$(v_rpm)
+
+fix movecad13 all move/mesh mesh cad3 rotate origin 0 0 0 axis 0 1 0 & 
+period $(v_periodrot)
+
+variable runsteps11 equal ceil(($(v_periodrot)*$(v_numrot))/$(v_ts)) 
+run $(v_runsteps11)
+info communication time out log 
+
+
+
+
+
+

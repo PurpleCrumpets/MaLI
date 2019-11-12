@@ -1,0 +1,369 @@
+### Rotating Drum Simulation Restart
+
+
+################################################################################
+################################################################################
+### Initialisation
+################################################################################
+################################################################################
+
+
+
+################################################################################
+##  I1  Initialisation - Import Parameters from data.head
+################################################################################
+
+print "----> Importing Variables..."
+include data.head
+
+
+################################################################################
+##  I2  Initialisation - Load Restart File
+################################################################################
+
+print "----> Loading Restart File..."
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+"read_restart restart/2D_periodic.restart" &
+elif "(${simdim} == 2) && (${periodicbb} == 0)" &
+"read_restart restart/2D_non_periodic.restart" else &
+"read_restart restart/3D.restart"
+
+
+################################################################################
+##  I3  Initialisation - Preliminaries
+################################################################################
+
+# Atom Stype Properties
+variable atommod equal ${neighdim}/2
+atom_modify sort 1000 ${atommod} # Spatial sorting of atoms every N time-steps
+
+# Newton's 3rd Law
+newton	    off             # Off for DEM sim with only short-range interactions
+
+# Style of Inter-processor Communication
+communicate single vel yes  # Proc gets info on ghost atoms outside sub-domain 
+
+# Drum Length
+if "${simdim} == 2" then "variable lengthdrum equal ${lengthdrum2D}" else &
+	"variable lengthdrum equal ${lengthdrum3D}"
+
+# Neighbour Listing
+neighbor     ${neighdim} bin # Size of neighbour list, default for SI 0.001 m.
+# Algorithm used to build list is bin, scales with # of atoms/# of processors
+neigh_modify delay 0 # How often neighbour list is calcuated 
+
+
+################################################################################
+##  I4  Initialisation - Declare Domain
+################################################################################
+
+# Domain Limits (m)
+variable limit1  equal (${widthdrum}/2)+0.006 # Min +/- x/z-direction
+variable limit5  equal ${lengthdrum}+0.001    # + y-direction (remove divider)
+
+if "${simdim} == 3" then &
+	"variable limit2 equal ${thickcap}+0.036" &
+	"variable limit6 equal ${lengthdrum}+${thickcap}+0.201" & 
+else 	"variable limit2 equal ${thickcap}+0.001" &                 
+	"variable limit6 equal ${lengthdrum}+${thickcap}+0.001"   
+# limit2 min -y-direction 0.036  limit6 0.201
+variable limit8  equal ${lengthdrum}+0.01
+
+variable limit11 equal 0.1 # Extrude length of region of insertion
+if "(${proc} > 16)" then "variable limit11 equal 2*${limit11}" &
+	"variable insertionrate equal ${insertionrate}/4"
+
+variable limit3  equal ${limit8}+${limit11}+0.01 # - y-dir filling drum
+
+# Limits for Vibration of Drum
+variable limit4  equal ${thickcap}+${yamplitude}+0.01 # -ve y
+variable limit7  equal ${thickcap}+${yamplitude}+${lengthdrum}+0.01 # +ve y
+variable limit12 equal ${limit1}+2*${xamplitude} # Max +/- x-direction
+variable limit13 equal ${limit1}+2*${zamplitude} # Max +/- z-direction
+
+# Limits for Periodic Domain
+variable limit9  equal ${lengthdrum} # Min - y-direction (periodic boundary)
+variable limit10 equal 0             # Min + y-direction (periodic boundary)
+
+
+################################################################################
+##  I5  Initialisation - Material, Interaction Properties (PP, GL, DW, DE1, DE2)
+################################################################################
+
+# Young's Modulus
+fix m1 all property/global youngsModulus peratomtype &
+${ymPP} ${ymGL} ${ymDW} ${ymDE1} ${ymDE2}
+hard_particles yes # Allow for Youngs Modulus > 1e9 Pa
+
+# Poisson's Ratio
+fix m2 all property/global poissonsRatio peratomtype &
+${prPP} ${prGL} ${prDW} ${prDE1} ${prDE2}
+
+# Coefficient of Restitution
+fix m3 all property/global coefficientRestitution peratomtypepair 5 &
+${CoR_PP_PP}  ${CoR_PP_GL}  ${CoR_PP_DW}  ${CoR_PP_DE1}  ${CoR_PP_DE2}  &
+${CoR_PP_GL}  ${CoR_GL_GL}  ${CoR_GL_DW}  ${CoR_GL_DE1}  ${CoR_GL_DE2}  &
+${CoR_PP_DW}  ${CoR_GL_DW}  ${CoR_DW_DW}  ${CoR_DW_DE1}  ${CoR_DW_DE2}  &
+${CoR_PP_DE1} ${CoR_GL_DE1} ${CoR_DW_DE1} ${CoR_DE1_DE1} ${CoR_DE1_DE2} &
+${CoR_PP_DE2} ${CoR_GL_DE2} ${CoR_DW_DE2} ${CoR_DE1_DE2} ${CoR_DE2_DE2} 
+
+# Coefficient of Friction
+fix m4 all property/global coefficientFriction peratomtypepair 5 &
+${CoSF_PP_PP}  ${CoSF_PP_GL}  ${CoSF_PP_DW}  ${CoSF_PP_DE1}  ${CoSF_PP_DE2}  &
+${CoSF_PP_GL}  ${CoSF_GL_GL}  ${CoSF_GL_DW}  ${CoSF_GL_DE1}  ${CoSF_GL_DE2}  &
+${CoSF_PP_DW}  ${CoSF_GL_DW}  ${CoSF_DW_DW}  ${CoSF_DW_DE1}  ${CoSF_DW_DE2}  &
+${CoSF_PP_DE1} ${CoSF_GL_DE1} ${CoSF_DW_DE1} ${CoSF_DE1_DE1} ${CoSF_DE1_DE2} &
+${CoSF_PP_DE2} ${CoSF_GL_DE2} ${CoSF_DW_DE2} ${CoSF_DE1_DE2} ${CoSF_DE2_DE2} 
+
+# Coefficient of Rolling Friction
+fix m5 all property/global coefficientRollingFriction peratomtypepair 5 &
+${CoRF_PP_PP}  ${CoRF_PP_GL}  ${CoRF_PP_DW}  ${CoRF_PP_DE1}  ${CoRF_PP_DE2}  &
+${CoRF_PP_GL}  ${CoRF_GL_GL}  ${CoRF_GL_DW}  ${CoRF_GL_DE1}  ${CoRF_GL_DE2}  &
+${CoRF_PP_DW}  ${CoRF_GL_DW}  ${CoRF_DW_DW}  ${CoRF_DW_DE1}  ${CoRF_DW_DE2}  &
+${CoRF_PP_DE1} ${CoRF_GL_DE1} ${CoRF_DW_DE1} ${CoRF_DE1_DE1} ${CoRF_DE1_DE2} &
+${CoRF_PP_DE2} ${CoRF_GL_DE2} ${CoRF_DW_DE2} ${CoRF_DE1_DE2} ${CoRF_DE2_DE2}
+
+# Particle Diameter
+
+variable diaPP equal 2*${radiusPP}
+variable diaGL equal 2*${radiusGL}
+
+
+################################################################################
+##  I6  Initialisation - Particle Insertion 
+################################################################################
+
+# Number of Particles based on filling degree (assume same radius)
+variable totalparticles equal (3/4)*(${fillingdegree}*(1-${porosity}))*((((${iddrum}/2)^2)*${lengthdrum})/(${radiusPP}^3))
+variable numglass equal floor(${volfracGL}*${totalparticles}) # Glass
+variable numPP equal floor(${volfracPP}*${totalparticles})    # PP
+
+# Particle Template
+fix pts1 all particletemplate/sphere 123457   atom_type 1 density constant &
+${densityPP} radius constant ${radiusPP} # PP particles
+fix pts2 all particletemplate/sphere 15485863 atom_type 2 density constant &
+${densityGL} radius constant ${radiusGL} # Glass particles
+
+# Particle Distributions
+fix pdd1 all particledistribution/discrete 8593931  1 pts1 1.0
+fix pdd2 all particledistribution/discrete 15485867 1 pts2 1.0
+
+
+################################################################################
+##  I7  Initialisation - Import Mesh from CAD file as Atom Type 3 (PMMA)
+################################################################################
+
+# Import 2D/3D Drum (cad3)
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+	"fix cad3 all mesh/surface file meshes/rotating_drum2D.stl &
+ 	precision 1e-13 type 3 scale 0.001 rotate axis 1 0 0 angle 90" &
+elif "${simdim} == 2" "fix cad3 all mesh/surface &
+	file meshes/rotating_drum2D.stl &
+	type 3 scale 0.001 rotate axis 1 0 0 angle 90" &
+else "fix cad3 all mesh/surface file meshes/rotating_drum.stl &
+	type 3 scale 0.001 rotate axis 1 0 0 angle 90"
+
+# Import Bottom Lid (cad4), Top Lid (cad6)
+if "(${simdim} == 2) && (${periodicbb} == 1)" then "print ''" &
+else "fix cad4 all mesh/surface file meshes/bottom_lid_with_slit.stl type 5 &
+	scale 0.001 rotate axis 1 0 0 angle 90 move 0 ${thickcap} 0" &
+	"fix cad6 all mesh/surface file meshes/top_lid.stl type 4 scale 0.001 &
+	rotate axis 1 0 0 angle 90 move 0 -${lengthdrum} 0"
+
+# Contact Model for Geometry
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+	"fix geometry all wall/gran model hertz tangential history &
+	rolling_friction epsd2 mesh n_meshes 1 meshes cad3" &
+else "fix geometry all wall/gran model hertz tangential history &
+	rolling_friction epsd2 mesh n_meshes 3 meshes cad3 cad4 cad6"
+
+
+################################################################################
+##  I8  Initialisation - Detailed Settings
+################################################################################
+
+# Define Physics
+pair_style gran model hertz tangential history cohesion off &
+	rolling_friction epsd2 surface default
+# Hertz without cohesion inc rolling friction
+pair_coeff * *       # Indicate all particles interact via granular potential
+
+# Integrator
+fix integrate all nve/sphere # Constant number, volume, energy
+
+# Gravity
+fix grav all gravity 9.81 vector 0.0 0.0 -1.0 # Gravity in z-direction
+
+# Time-step Size
+timestep ${ts} # Less than, equal to 20% of Raleigh time-step
+
+# Current Time-step
+variable now equal step # When referred to as 'v_now' gives current time-step
+
+# Thermodynamic Output Settings
+variable        thermofreq equal round(${thermostep}/${ts}) # (time-steps)
+compute		cp1 all erotate/sphere
+thermo_style	custom step atoms ke c_cp1 spcpu vol
+thermo          ${thermofreq}
+thermo_modify	lost warn norm no flush yes
+# Check for lost atoms, thermo not normalised
+
+# Record Rotational Velocity of Drum
+variable omegaiter equal 0 # Initial rotational speed of drum (time-step = 1)
+print "${omegaiter}" screen no append post/drum_rotational_velocity.txt
+
+# Create Periodic Geometry/Particle/Image Dump
+if "(${simdim} == 2) && (${periodicbb} == 1)" then "print ''" else &
+   "dump dumpstl8 all mesh/stl ${thermofreq} post/dump_ends_*.stl cad4 cad6"
+
+dump dumpstl7 all mesh/stl ${thermofreq} post/dump_drum_*.stl cad3
+dump dumpstl0 all custom/vtk ${thermofreq} post/particles_*.vtk &
+id type radius x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz
+
+# Writing Drum Rotational Speed to File
+fix rotdrum all print ${thermofreq} "${omegaiter}" screen no &
+title none append post/drum_rotational_velocity.txt
+
+# Initial Imaging Command (restart)
+include imaging.data
+
+# Print System Information
+info communication time out log 
+
+
+
+################################################################################
+################################################################################
+### Execution
+################################################################################
+################################################################################
+
+
+
+################################################################################
+##  E1  Execution - Rotation of Drum Around Longitudinal Axis - Initial Cond.
+################################################################################
+
+# Record Current Time-Step to File 
+print "${now}" screen no append post/start_rotating.txt
+
+# Obtain RPM, Times from Input File 'rpm_drum.txt' 
+variable input file rpm_drum.txt
+
+# Initial Conditions
+variable timeAccel1 equal ${input} # Likely 0 (seconds)
+next input
+variable rpmDrum1 equal ${input} # Likely 0 (rpm)
+next input
+
+# Drum Rotation Direction
+if "(${rotDirection} == 0)" then "variable rpmDrum1 equal  ${rpmDrum1}" &
+elif "(${rotDirection} == 1)"    "variable rpmDrum1 equal -${rpmDrum1}" 
+
+# Convert Initial RPM to Angular Velocity
+variable angVel1    equal ${rpmDrum1}*(PI/30) # (rad/s)
+
+# Initial Loop Count
+variable count      equal 1
+
+
+################################################################################
+##  E2  Execution - Rotation of Drum Around Longitudinal Axis - Loop
+################################################################################
+
+label loop2
+
+# Loop Count
+print "----> Drum Rotation Loop Count: ${count}"
+
+# Calibration Imaging Command
+include imaging.data
+
+# Obtain New RPM and Time
+variable timeAccel2 equal ${input} # (seconds)
+next input
+variable rpmDrum2 equal ${input} # (rpm)
+next input
+
+# Drum Rotation Direction
+if "(${rotDirection} == 0)" then "variable rpmDrum2 equal  ${rpmDrum2}" &
+elif "(${rotDirection} == 1)"    "variable rpmDrum2 equal -${rpmDrum2}" 
+
+# Convert RPM to Angular Velocity
+variable angVel2    equal ${rpmDrum2}*(PI/30) # (rad/s)
+
+# Obtain Change in Time, Calculate Corresponding Run Time
+variable deltaTime  equal ${timeAccel2}-${timeAccel1} # (seconds)
+variable runsteps   equal round(${deltaTime}/dt)      # (time-steps)
+
+# Current Time-Step
+variable imstep10   equal ${now} # (time-steps)
+
+# Angular Velocity
+if "(${angVel1} == ${angVel2})" then "variable omegaiter equal ${angVel2}" &
+else "variable omegaiter equal &
+      ${angVel1}+((${angVel2}-${angVel1})*((step-${imstep10})*dt)/${deltaTime})"
+
+# Rotate Geometry 
+fix movecad1 all move/mesh mesh cad3 rotate/variable origin 0 0 0 axis 0 1 0 &
+omega v_omegaiter
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then "print ''" else &
+"fix movecad2 all move/mesh mesh cad4 rotate/variable origin 0 0 0 axis 0 1 0 &
+omega v_omegaiter" &
+"fix movecad3 all move/mesh mesh cad6 rotate/variable origin 0 0 0 axis 0 1 0 &
+omega v_omegaiter"
+
+# Run Simulation, Increment Loop Count
+print "----> Rotating Drum Loop Number: ${count}..."
+variable count      equal ${count}+1
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Stop Rotation of Geometry
+unfix movecad1
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then "print ''" else &
+"unfix movecad2" &
+"unfix movecad3"
+
+# New Angular Velocity and Time
+variable timeAccel1 equal ${timeAccel2}
+variable angVel1    equal ${angVel2}
+
+# Restart Loop
+jump in.rotatingdrum loop2
+
+# End of Drum Rotation Loop
+label endloop2
+
+
+################################################################################
+##  E3  Execution - Rotation of Drum Around Longitudinal Axis - Save Restart
+################################################################################
+
+## Record current time-step to file 
+print "${now}" screen no append post/start_rotating.txt
+
+# Create Restart File (5)
+print "----> Writing Final Restart File (5)..."
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+"write_restart restart/END_2D_periodic.restart" &
+elif "(${simdim} == 2) && (${periodicbb} == 0)" &
+"write_restart restart/END_2D_non_periodic.restart" else &
+"write_restart restart/END_3D.restart"
+
+
+print "----> Simulation Finished!"
+
+
+
+################################################################################
+################################################################################
+## Simulation Finished
+################################################################################
+################################################################################

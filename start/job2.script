@@ -1,0 +1,15 @@
+#!/bin/bash
+cd path
+pwd
+
+echo "Looking for error messages..."
+echo "Please don't close this window..."
+sleep 2
+while [ "$(grep -i 'error\|----> Simulation Finished!' log.liggghts | wc -l)" -eq 0 ]
+do
+	sleep 1
+done
+
+ps -ef | grep tail | awk '{print $2}' | xargs kill -9
+
+exit

@@ -1,0 +1,2 @@
+cd ~/MYLIGGGHTS/simulations/12_11_test2
+/opt/torque/bin/qsub job.script

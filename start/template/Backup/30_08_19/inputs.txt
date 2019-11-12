@@ -1,0 +1,100 @@
+### Input Parameters for LIGGGHTS Simulation
+
+## Simulation
+200:00:00 # walltime        -> Max simulation runtime (hhh:mm:ss)
+2         # simdim          -> Simulation dimensions, 2D (2) or 3D (3)
+1         # periodicbb      -> Only for 2D sim 0/1 - non/periodic boundary box
+4         # proc            -> Number of processing cores utilised
+1         # autoproc        -> Auto set processor layout (yes = 1, no = 0)
+0         # xproc           -> x-direction processor layout (0 for auto-assign)
+0         # yproc           -> y-direction processor layout (0 for auto-assign)
+0         # zproc           -> z-direction processor layout (0 for auto-assign)
+# NOTE: The product of xproc, yproc, zproc should equal proc if autoproc 
+# is set to 0. Otherwise, the MATLAB input script will not be happy. ;)
+# Walltime and proc are necessary for running a simulation using MATLAB.
+ 
+## DEM Parameters
+0.0000050 # ts              -> Timestep               (s)
+0.004     # neighdim        -> Size of neighbour list (m)
+0.040     # thermostep      -> Thermo timestep        (s)
+
+## Particle Insertion
+2000      # insertionrate   -> (particles of one type/s)
+0.5       # volfracglass    -> Volume fraction of glass in bed (-)
+0.5       # volfracPP       -> Volume fraction of PP in bed    (-)
+0.01     # fillingdegree   -> Volume filling degree of drum   (-)
+0.36      # porosity        -> Porosity of bed (0.36 assumes random packing) (-)
+
+
+## Material Properties 
+# Radius
+0.002     # radglass        -> Radius of glass particles (m)
+0.002     # radPP           -> Radius of PP particles    (m)
+
+# Density
+2500      # denglass        -> Density of glass particles (kg/m^3)
+0900      # denPP           -> Density of PP particles    (kg/m^3)
+
+# Young's Modulus
+50e8      # ymglass         -> Young's Modulus of glass (Pa)
+1.5e8     # ymPP            -> Young's Modulus of PP    (Pa)
+2.4e8     # ymPMMA          -> Young's Modulus of PMMA  (Pa)
+
+# Poisson's Ratio
+0.200     # prglass         -> Poisson's Ratio of glass (-)
+0.430     # prPP            -> Poisson's Ratio of PP    (-)
+0.360     # prPMMA          -> Poisson's Ratio of PMMA  (-)
+
+# Coefficient of Restitution (COR)
+0.8000    # restglassglass  -> glass-glass (-)
+0.8000    # restglassPP     -> glass-PP    (-)
+0.8000    # restglassPMMA   -> glass-PMMA  (-)
+0.8000    # restPPPP        -> PP-PP       (-)
+0.8000    # restPPPMMA      -> PP-PMMA     (-)
+0.0501    # restPMMAPMMA    -> PMMA-PMMA   (-)
+
+# Coefficient of Friction (COF)
+0.9000    # frictglassglass -> glass-glass (-)
+0.9000    # frictglassPP    -> glass-PP    (-)
+0.9000    # frictglassPMMA  -> glass-PMMA  (-)
+0.9000    # frictPPPP       -> PP-PP       (-)
+0.9000    # frictPPPMMA     -> PP-PMMA     (-)
+0.0000    # frictPMMAPMMA   -> PMMA-PMMA   (-)
+
+# Coefficient of Rolling Friction (CRF)
+0.0050    # rollglassglass  -> glass-glass (-)
+0.0050    # rollglassPP     -> glass-PP    (-)
+0.0050    # rollglassPMMA   -> glass-PMMA  (-)
+0.0050    # rollPPPP        -> PP-PP       (-)
+0.0050    # rollPPPMMA      -> PP-PMMA     (-)
+0.0000    # rollPMMAPMMA    -> PMMA-PMMA   (-)
+
+## Geometry
+# Sizing Domain
+0.300   # lengthdrum3D      -> Length of '3D' drum       (m)
+0.020   # lengthdrum2D      -> Length of '2D' drum       (m)
+0.150   # widthdrum         -> O.D. of drum              (m)
+0.144   # iddrum            -> I.D. of drum              (m)
+0.010   # thickcap          -> Thickness of end caps     (m)
+
+# Rotational Mixing of Drum
+60.0   # rpmMix            -> rpm of drum during mixing      (rpm)
+10      # numrotMix         -> Number of rotations for mixing (-)
+
+# Vibration of Drum
+0.000  # xamplitude         -> x-direction amplitude      (m)
+0.005  # yamplitude         -> y-direction amplitude      (m)
+0.000  # zamplitude         -> z-direction amplitude      (m)
+010.0  # frequencyvib       -> Frequency of oscillation   (Hz)
+0020.0 # timevib            -> Time vibrating drum        (s) (NOT IN USE)
+010    # cyclevib           -> Number of vibration cycles (-)
+
+# Rotation of Drum
+1.570796327 # angularaccel  -> Angular acceleration at start-up (PI/2) (rad/s2)
+40.0  # rpm                 -> rpm of drum (rpm)
+10.0  # numrot              -> Number of rot (-) (after reaching SS)
+01.0  # acctime             -> Time to reach operational rpm (s)
+
+# Other
+2.00    # rottime           -> Rotation time to place drum flat (s)
+0.050   # dividerspeed      -> Linear velocity of divider       (m/s)

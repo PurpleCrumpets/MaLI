@@ -1,0 +1,58 @@
+## Initial Imaging Information
+# Initial camera angle showing the filling of the drum. No change in camera
+# angle during this period, constant zoom. The focus point is the centre of the
+# drum.
+
+################################################################################
+# Start Imaging Command (1)
+################################################################################
+
+print "Opened imaging1.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 2) || (${imaging} == 3)" then &
+	"jump imaging/imaging1.data endImjump"
+
+# Drum Absolute Position
+variable drumPosX1 equal 0               # (metres)
+variable drumPosY1 equal 0               # (metres)
+variable drumPosZ1 equal ${lengthdrum}/2 # (metres)
+
+# Camera Information
+variable theta1    equal 70  # (degrees)
+variable phi1      equal 235 # (degrees)
+if "${simdim} == 2" then "variable zoom1 equal 1" else &
+	"variable zoom1 equal 1.5"
+
+# Calculate Zoom Parameters
+variable delX1     equal 2*(${limit1}+${limit1}) # (metres)
+variable delY1     equal 2*(${limit1}+${limit1}) # (metres)
+variable delZ1     equal 2*(${limit3}+${limit2}) # (metres)
+variable maxDel1   equal 2*(${limit3}+${limit2}) # z-direction (metres)
+
+variable FOV       equal PI/6
+variable camDir01  equal sin(${theta1}*PI/180)*cos(${phi1}*PI/180)
+variable camDir11  equal sin(${theta1}*PI/180)*sin(${phi1}*PI/180)
+variable camDir21  equal cos(${theta1}*PI/180)
+
+variable zdist1    equal (${maxDel1}/tan(${FOV})+(0.5*(${camDir01}*${delX1}+${camDir11}*${delY1}+${camDir21}*${delZ1})))/${zoom1}
+
+# Centre Using Current CS
+variable centreX1 equal (${drumPosX1}+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreY1 equal (${drumPosY1}+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreZ1 equal (${drumPosZ1}+${limit2})/(${limit3}+${limit2}) # (-)
+
+# Initial Imaging Command
+dump dumpimage1 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom ${zoom1} size 1080 1080 view ${theta1} ${phi1} &
+	center s ${centreX1} ${centreY1} ${centreZ1} shiny 0
+dump_modify dumpimage1 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (1)
+################################################################################

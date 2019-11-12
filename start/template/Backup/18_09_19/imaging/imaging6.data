@@ -1,0 +1,62 @@
+## New Imaging Information (6)
+
+# During the removal of the divider, the camera position is fixed. The location 
+# of the drum is updated due to the change in the boundary box.
+
+################################################################################
+# Start Imaging Command (6)
+################################################################################
+
+print "Opened imaging6.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 2) || (${imaging} == 3)" then &
+	"jump imaging/imaging6.data endImjump"
+
+
+# Prepare for New Imaging Command
+undump dumpimage5 # Removing old imaging command
+variable imstep6    equal ${now} # Current timestep
+
+# Drum Absolute Position
+variable drumPosX6  equal 0                  # (metres)
+variable drumPosY6  equal -(${lengthdrum}/2) # (metres)
+variable drumPosZ6  equal 0		     # (metres)
+
+# Camera Information
+variable theta6     equal 70  # (degrees)
+variable phi6       equal 235 # (degrees)
+
+variable centreX6   equal (${drumPosX6}+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreY6   equal (${drumPosY6}+${limit7})/(${limit5}+${limit7}) # (-)
+variable centreZ6   equal (${drumPosZ6}+${limit1})/(${limit1}+${limit1}) # (-)
+
+# Calculate New Zoom
+variable delX6      equal 2*(${limit1}+${limit1}) # (metres)
+variable delY6      equal 2*(${limit5}+${limit7}) # (metres)
+variable delZ6      equal 2*(${limit1}+${limit1}) # (metres)
+variable maxDel6    equal 2*(${limit5}+${limit7}) # y-direction (metres)
+
+variable camDir06   equal sin(${theta6}*PI/180)*cos(${phi6}*PI/180)
+variable camDir16   equal sin(${theta6}*PI/180)*sin(${phi6}*PI/180)
+variable camDir26   equal cos(${theta6}*PI/180)
+
+variable zdistPart6 equal (${maxDel6}/tan(${FOV})+(0.5*(${camDir06}*${delX6}+${camDir16}*${delY6}+${camDir26}*${delZ6})))
+
+variable zoom6      equal ${zdistPart6}/${zdist5}
+variable zdist6     equal ${zdistPart6}/${zoom6}
+
+# New Imaging Command
+dump dumpimage6 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom ${zoom6} size 1080 1080 view ${theta6} ${phi6} &
+	center s ${centreX6} ${centreY6} ${centreZ6} shiny 0
+dump_modify dumpimage6 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (6)
+################################################################################

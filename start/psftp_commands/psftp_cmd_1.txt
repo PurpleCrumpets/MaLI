@@ -1,0 +1,6 @@
+cd MYLIGGGHTS/simulations/12_11_test2/
+lcd M:\fwdf\members\church70\MATLAB_Integration\start\template
+mput -r meshes
+mput runscript postscript in.rotatingdrum data.head imaging.data rpm_drum.txt
+lcd M:\fwdf\members\church70\MATLAB_Integration\start\
+mput job.script job2.script job3.script

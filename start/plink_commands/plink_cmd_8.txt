@@ -1,0 +1,2 @@
+cd ~/MYLIGGGHTS/simulations/12_11_test2
+test -e log.liggghts && echo 1 || echo 0

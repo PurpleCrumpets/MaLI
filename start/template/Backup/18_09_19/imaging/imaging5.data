@@ -1,0 +1,61 @@
+## New Imaging Information (5)
+# After vibration, the particle in the drum are allowed to settle. During this
+# period, the camera angle is rotated such that the removing of the divider can
+# be easily seen. The bounding box is still the same as for imaging4.data.
+
+################################################################################
+# Start Imaging Command (5)
+################################################################################
+
+print "Opened imaging5.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 2) || (${imaging} == 3)" then &
+	"jump imaging/imaging5.data endImjump"
+
+# Prepare for New Imaging Command
+undump dumpimage4 # Removing old imaging command
+variable imstep5    equal ${now} # Current timestep
+
+# Drum Absolute Position
+variable drumPosX5  equal 0                  # (metres)
+variable drumPosY5  equal -(${lengthdrum}/2) # (metres)
+variable drumPosZ5  equal 0 		     # (metres)
+
+# Camera Information
+variable theta5     equal ${theta4}+(70-${theta4})*(((step-${imstep5})*dt)/${settle}) # (degrees)
+variable phi5       equal ${phi4}+(235-${phi4})*(((step-${imstep5})*dt)/${settle})    # (degrees)
+
+variable centreX5   equal (${drumPosX5}+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreY5   equal (${drumPosY5}+${limit7})/(${limit4}+${limit7}) # (-)
+variable centreZ5   equal (${drumPosZ5}+${limit1})/(${limit1}+${limit1}) # (-)
+
+# Calculate New Zoom
+variable delX5      equal 2*(${limit1}+${limit1}) # (metres)
+variable delY5      equal 2*(${limit4}+${limit7}) # (metres)
+variable delZ5      equal 2*(${limit1}+${limit1}) # (metres)
+variable maxDel5    equal 2*(${limit4}+${limit7}) # y-direction (metres)
+
+variable camDir05   equal sin(v_theta5*PI/180)*cos(v_phi5*PI/180)
+variable camDir15   equal sin(v_theta5*PI/180)*sin(v_phi5*PI/180)
+variable camDir25   equal cos(v_theta5*PI/180)
+
+variable zdistPart5 equal (${maxDel5}/tan(${FOV})+(0.5*(v_camDir05*${delX5}+v_camDir15*${delY5}+v_camDir25*${delZ5})))
+
+variable zoom5      equal v_zdistPart5/${zdist4}
+variable zdist5     equal v_zdistPart5/v_zoom5
+
+# New Imaging Command
+dump dumpimage5 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom v_zoom5 size 1080 1080 view v_theta5 v_phi5 &
+	center s v_centreX5 v_centreY5 v_centreZ5 shiny 0
+dump_modify dumpimage5 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (5)
+################################################################################

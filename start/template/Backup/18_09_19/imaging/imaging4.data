@@ -1,0 +1,60 @@
+## New Imaging Information (4)
+# With the drum level, the next imaging command is for the levelling of the
+# particles within the drum. The centre of the camera is now fixed.
+
+################################################################################
+# Start Imaging Command (4)
+################################################################################
+
+print "Opened imaging4.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 2) || (${imaging} == 3)" then &
+	"jump imaging/imaging4.data endImjump"
+
+# Prepare for New Imaging Command
+undump dumpimage3 # Removing old imaging command
+variable imstep4   equal ${now} # Current timestep
+
+# Drum Absolute Position
+variable drumPosX4 equal 0		    # (metres)
+variable drumPosY4 equal -(${lengthdrum}/2) # (metres)
+variable drumPosZ4 equal 0          	    # (metres)
+
+# Camera Information
+variable theta4    equal 90  # (degrees)
+variable phi4      equal 180 # (degrees)
+
+variable centreX4  equal (${drumPosX4}+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreY4  equal (${drumPosY4}+${limit7})/(${limit4}+${limit7}) # (-)
+variable centreZ4  equal (${drumPosZ4}+${limit1})/(${limit1}+${limit1}) # (-)
+
+# Calculate New Zoom
+variable delX4      equal 2*(${limit1}+${limit1}) # (metres)
+variable delY4      equal 2*(${limit4}+${limit7}) # (metres)
+variable delZ4      equal 2*(${limit1}+${limit1}) # (metres)
+variable maxDel4    equal 2*(${limit4}+${limit7}) # y-direction (metres)
+
+variable camDir04   equal sin(${theta4}*PI/180)*cos(${phi4}*PI/180)
+variable camDir14   equal sin(${theta4}*PI/180)*sin(${phi4}*PI/180)
+variable camDir24   equal cos(${theta4}*PI/180)
+
+variable zdistPart4 equal (${maxDel4}/tan(${FOV})+(0.5*(${camDir04}*${delX4}+${camDir14}*${delY4}+${camDir24}*${delZ4})))
+
+variable zoom4      equal ${zdistPart4}/${zdist3}
+variable zdist4     equal ${zdistPart4}/${zoom4}
+
+# New Imaging Command
+dump dumpimage4 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom ${zoom4} size 1080 1080 view ${theta4} ${phi4} &
+	center s ${centreX4} ${centreY4} ${centreZ4} shiny 0
+dump_modify dumpimage4 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (4)
+################################################################################

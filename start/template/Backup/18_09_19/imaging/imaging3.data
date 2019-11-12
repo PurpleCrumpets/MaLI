@@ -1,0 +1,61 @@
+## New Imaging Information (3)
+# The new imaging commad cancels the previous rotation of the camera. As the
+# drum is rotated flat, the centre of the image changes with the change in the
+# centre of the drum, relative to the new boundary box.
+
+################################################################################
+# Start Imaging Command (3)
+################################################################################
+
+print "Opened imaging3.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 2) || (${imaging} == 3)" then &
+	"jump imaging/imaging3.data endImjump"
+
+# Prepare for New Imaging Command
+undump dumpimage2 # Removing old imaging command
+variable imstep3    equal ${now} # Current timestep
+
+# Drum Absolute Position
+variable drumPosX3  equal 0 # (metres)
+variable drumPosY3  equal -(${lengthdrum}/2)*sin((90*PI/180)*(dt/${rottime})*(step-${imstep3})) # (metres)
+variable drumPosZ3  equal (${lengthdrum}/2)*cos((90*PI/180)*(dt/${rottime})*(step-${imstep3}))  # (metres)
+
+# Camera Information
+variable theta3     equal 90  # (degrees)
+variable phi3       equal 180 # (degrees)
+
+variable centreX3   equal (v_drumPosX3+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreY3   equal (v_drumPosY3+${limit6})/(${limit1}+${limit6}) # (-)
+variable centreZ3   equal (v_drumPosZ3+${limit1})/(${limit3}+${limit1}) # (-)
+
+# Calculate New Zoom
+variable delX3      equal 2*(${limit1}+${limit1}) # (metres)
+variable delY3      equal 2*(${limit1}+${limit6}) # (metres)
+variable delZ3      equal 2*(${limit3}+${limit1}) # (metres)
+variable maxDel3    equal 2*(${limit3}+${limit1}) # z-direction (metres)
+
+variable camDir03   equal sin(${theta3}*PI/180)*cos(${phi3}*PI/180)
+variable camDir13   equal sin(${theta3}*PI/180)*sin(${phi3}*PI/180)
+variable camDir23   equal cos(${theta3}*PI/180)
+
+variable zdistPart3 equal (${maxDel3}/tan(${FOV})+(0.5*(${camDir03}*${delX3}+${camDir13}*${delY3}+${camDir23}*${delZ3})))
+
+variable zoom3      equal ${zdistPart3}/${zdist2}
+variable zdist3     equal ${zdistPart3}/${zoom3}
+
+# New Imaging Command
+dump dumpimage3 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom ${zoom3} size 1080 1080 view ${theta3} ${phi3} &
+	center s v_centreX3 v_centreY3 v_centreZ3 shiny 0
+dump_modify dumpimage3 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (3)
+################################################################################

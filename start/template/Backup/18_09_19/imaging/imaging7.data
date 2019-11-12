@@ -1,0 +1,63 @@
+## New Imaging Information (7)
+
+# During the settlng period after the removal of the divider, the camera is 
+# repositioned in preparation for viewing the rotation of the drum.
+
+################################################################################
+# Start Imaging Command (7)
+################################################################################
+
+print "Opened imaging7.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 2) || (${imaging} == 3)" then &
+	"jump imaging/imaging7.data endImjump"
+
+# Prepare for New Imaging Command
+undump dumpimage6 # Removing old imaging command
+variable imstep7    equal ${now} # Current timestep
+
+# Drum Absolute Position
+variable drumPosX7  equal 0		     # (metres)
+variable drumPosY7  equal -(${lengthdrum}/2) # (metres)
+variable drumPosZ7  equal 0		     # (metres)
+
+# Camera Information
+variable theta7     equal ${theta6}+(90-${theta6})*(((step-${imstep7})*dt)/${settle}) # (degrees)
+variable phi7       equal ${phi6}+(270-${phi6})*(((step-${imstep7})*dt)/${settle})    # (degrees)
+
+variable centreX7   equal (${drumPosX7}+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreY7   equal (${drumPosY7}+${limit7})/(${limit4}+${limit7}) # (-)
+variable centreZ7   equal (${drumPosZ7}+${limit1})/(${limit1}+${limit1}) # (-)
+
+# Calculate New Zoom
+variable delX7      equal 2*(${limit1}+${limit1}) # (metres)
+variable delY7      equal 2*(${limit4}+${limit7}) # (metres)
+variable delZ7      equal 2*(${limit1}+${limit1}) # (metres)
+variable maxDel7    equal 2*(${limit4}+${limit7}) # y-direction (metres)
+
+variable camDir07   equal sin(v_theta7*PI/180)*cos(v_phi7*PI/180)
+variable camDir17   equal sin(v_theta7*PI/180)*sin(v_phi7*PI/180)
+variable camDir27   equal cos(v_theta7*PI/180)
+
+variable zdistPart7 equal (${maxDel7}/tan(${FOV})+(0.5*(v_camDir07*${delX7}+v_camDir17*${delY7}+v_camDir27*${delZ7})))
+
+variable zoom7init  equal ${zdistPart7}/${zdist6}
+variable zoom7      equal ${zoom7init}+(3-${zoom7init})*(((step-${imstep7})*dt)/${settle})
+
+variable zdist7     equal v_zdistPart7/v_zoom7
+
+# New Imaging Command
+dump dumpimage7 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom v_zoom7 size 1080 1080 view v_theta7 v_phi7 &
+	center s v_centreX7 v_centreY7 v_centreZ7 shiny 0
+dump_modify dumpimage7 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (7)
+################################################################################

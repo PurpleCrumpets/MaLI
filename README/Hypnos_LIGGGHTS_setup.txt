@@ -1,0 +1,281 @@
+# Setting Up LIGGGHTS on the cluster 
+
+# Login to cluster
+ssh -X USERNAME@hypnos5.fz-rossendorf.de
+
+# Setting language 
+LANG=ENG
+
+# Getting LIGGHTS from its GitHub repository
+git clone https://github.com/CFDEMproject/LIGGGHTS-PUBLIC.git
+
+# Changing name of LIGGGHTS folder
+mv LIGGGHTS-PUBLIC/ MYLIGGGHTS 
+
+# Checking for available environmental modules and loading relevant ones
+module avail
+module load cmake/3.10.1
+module load gcc/7.2.0
+module load openmpi/1.8.6 
+
+# Creating lmp_auto
+cd MYLIGGGHTS/src
+make auto
+
+# The above command will fail. This is ok. It creates a file called Makefile.user that has a bunch of settings that can be edited.
+
+# Opening and editing Makefile.user
+gedit MAKE/Makefile.user
+
+# Find the line for AUTOINSTALL_VTK, remove comment symbol and edit it to be the following:
+AUTOINSTALL_VTK = "ON"
+
+# Cleaing up code before running make auto command.
+make clean-all
+
+# Requesting processors
+qsub -N makeauto -q default -l nodes=1:ppn=8 -l walltime=4:00:00 -I
+
+# -N makeauto         --> Setting name of job to makeauto
+# -q default          --> Selecting default queue 
+		          (see https://www.hzdr.de/db/Cms?pOid=29813&pNid=852)
+# -l nodes=1:ppn=8    --> Requesting one processing node and 8 processing cores
+# -l walltime=4:00:00 --> Setting job wall time to 4 hours 
+# -I                  --> Interactive job (allows for input to the command window)
+
+# If this command fails to bring up the following line: USERNAME@laser043:~$ (or something similar) ctrl + c and try again.
+
+# Compliing LIGGGHTS using 8 processing cores
+cd ~/MYLIGGGHTS/src
+make -j 8 auto
+
+# This can take a while to do run as it also need to download the VTK software and install it
+
+# Killing submitted job
+exit
+
+# Adding VTK path to .bashrc
+cd ~/
+gedit .bashrc
+
+# Add the following line updated with your username:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/USERNAME/MYLIGGGHTS/lib/vtk/install/lib/
+
+# Adding necessary modules to start-up to save time (beneath 'module purge')
+cd ~/
+gedit own.modules
+
+# Add the following lines
+module load cmake/3.10.1
+module load gcc/7.2.0
+module load openmpi/1.8.6 
+
+# If a different version of a module is already being loaded, please comment it out along with any other modules that you don't need (As this can potentially create conflict between modules).
+
+# Exit hypnos and login again
+exit
+ssh -X USERNAME@hypnos5.fz-rossendorf.de
+
+# Trying example simulation to make sure everything is working correctly.
+cd ~/MYLIGGGHTS/examples/LIGGGHTS/Tutorials_public/chute_wear/
+
+# Copying in lmp_auto file into example directory from src directory.
+cp ~/MYLIGGGHTS/src/lmp_auto ./
+
+# Checking that the file has copied across
+ls 
+
+# Running simulation
+qsub -N DEM -q default -l nodes=1:ppn=4 -l walltime=4:00:00 -I
+cd ~/MYLIGGGHTS/examples/LIGGGHTS/Tutorials_public/chute_wear/
+mpirun -np 4 lmp_auto < in.chute_wear
+
+--------------------------------------------------------------------------------
+## Adding Contact Model to Whitelist
+
+
+# A performance improvement of up to 20% can be achieved by adding the contact model specified in the DEM simulation to the contact model whitelist (assuming the model is not already present in the list).
+
+
+# To determine if a contact model is present on the whitelist, simply run the simulation as normal and view the log.liggghts file produced during the simulation. If the following is found in the log file when the contact model is applied, the whitelist needs to be updated:
+
+#WARNING: 
+#	The contact model you specified is not located in any whitelist.
+#	Because of this the model will be run in an unoptimized version (increasing runtime by up to 20%).
+#	In order to optimize this model you have the following options:
+#		(i)  Run the genAutoExamplesWhitelist.sh script in your LIGGGHTS(R) source folder to automatically parse the input script
+#		(ii) Add the model combination by hand to your style_contact_model_user.whitelist that can be found in your LIGGGHTS(R) source folder
+#	If you perform one of the steps above LIGGGHTS(R) needs to be recompiled to generate the optimized code.
+
+If using the script genAutoExamplesWhitelist.sh fails, the following instructions will work:
+
+
+cd MYLIGGGHTS/src/
+
+gedit style_contact_model_user.whitelist
+
+
+# Save file and close it
+
+rm lmp_auto
+
+make clean-all
+
+make -j 8 auto
+
+
+
+# Add the contact model to the bottom of the whitelist. The entry for the rotating drum DEM simulation is the following:
+
+GRAN_MODEL(HERTZ, TANGENTIAL_HISTORY, COHESION_OFF, ROLLING_EPSD2, SURFACE_DEFAULT)
+
+# The rotating drum DEM simulation uses the following  
+--------------------------------------------------------------------------------
+
+
+# Setting up Octave on the cluster
+
+
+# Login to cluster
+ssh -X USERNAME@hypnos5.fz-rossendorf.de
+
+# Selecting required environmental modules
+cd ~/
+gedit own.modules
+
+# Comment out all modules and add the following lines:
+module load gcc/7.2.0
+module load openmpi/1.10.2 
+module load gnuplot/5.2.0  
+module load glpk/4.64
+module load octave/4.2.2
+
+# These modules are everything needed to run LIGGGHTS, Octave and DEcalioc correctly.
+
+# Installing Octave Packages
+
+# The following packages need to be installed on the cluster for the simulation to work correctly. Due to their dependencies, it is recommended to install the packages in the following order:
+
+
+struct-1.0.14.tar.gz
+stk-2.5.0.tar.gz
+io-2.4.10.tar.gz
+statistics-1.3.0.tar.gz
+optim-1.5.2.tar.gz
+parallel-3.1.1.tar.gz
+
+
+# The packages can be found on octave.sourceforge.io. These are not the latest versions of each package and therefore must be obtained from the following link:
+# https://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/
+
+# Further information can be found at the following links:
+# Installing and removing packages
+https://octave.org/doc/v4.2.1/Installing-and-Removing-Packages.html
+# Octave packages
+https://octave.sourceforge.io/packages.php
+
+Once downloaded, the tar.gz files should be placed in your home directory (cd ~) on the cluster using an SSH program or copied from the HOME directory. 
+
+Octave can then be started and the packaged installed
+
+octave
+cd ~
+pkg install struct-1.0.14.tar.gz
+
+# To view a list of packages installed:
+pkg list 
+
+--------------------------------------------------------------------------------
+
+
+# Setting up DEcalioc on the cluster
+
+# Obtaining files fom GitHub repository
+cd ~/
+git clone https://github.com/DECALIOC/DEcalioc.git
+
+# Changing name of DEcalioc folder
+mv DEcalioc/ MYDecalioc
+
+# Running provided example to test that it is working correctly.
+
+ cd MYDEcalioc/DEcalioc/DEMmodels/Lift100/
+gedit runscript
+
+
+# Editing runscript to be the following:
+#!/bin/bash
+~/MYLIGGGHTS/src/lmp_auto < in.Lift100
+
+qsub -N octave_Cali -q default -l nodes=1:ppn=8 -l walltime=49:00:00 -I
+
+octave
+
+cd MYDEcalioc/DEcalioc/
+
+# Running Decalioc.m (initialisation script)
+
+DEcalioc
+
+
+# For any other calibration simulation, please make sure the runscript file has also been editied appropriately such that the lmp_auto executable can be found during the calibration process. The DEM simulation to calibrated should be placed in its own directory at the following path:
+
+MYDEcalioc/DEcalioc/DEMmodels/
+
+
+
+
+--------------------------------------------------------------------------------
+
+
+
+# Submitting a simulation to the cluster using MATLAB
+
+# Most of th
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+Editing LIGGGHTS Scripts
+
+# The best way to edit LIGGGHTS Scripts is to use the text editor gedit. A 
+# plugin exists that allows for the syntax of LIGGGHTS scripts to be highlighted
+# as appropriate.
+
+# Gedit can be installed from the following site:
+
+https://wiki.gnome.org/Apps/Gedit#Download
+
+# With gedit installed,the necessary language definition file can be found at
+# the following site:
+
+https://www.cfdem.com/gnome-syntax-highlighting
+
+# Extract the contents of liggghts.lang_.tar_.gz and place the liggghts.lang
+# file in the following directory for a Windows machine (or where ever you have
+# installed gedit):
+
+C:\Program Files\gedit\share\gtksourceview-3.0\language-specs
+
+For a linux machine, the liggghts.lang file should be placed in the following 
+# directory:
+
+/usr/share/gtksourceview-3.0/language-specs
+
+
+
+--------------------------------------------------------------------------------
+Switching between 3D and quasi-2D Simulations
+
+# By changing one number in inputs.txt, the same LIGGGHTS script
+# (in.rotatingdrum) can be used for both the 3D and the quasi-2D simulations.
+# To switch between the two, the variabe 'simdim' under the heading 
+# 'Simulation' should be set to '2' for the quasi-2D simulation or '3' for the 
+# 3D simulation. 
+
+

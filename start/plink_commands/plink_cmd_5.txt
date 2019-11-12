@@ -1,0 +1,1 @@
+cp ~/MYLIGGGHTS/src/lmp_auto ~/MYLIGGGHTS/simulations/12_11_test2

@@ -1,0 +1,3 @@
+cd MYLIGGGHTS/simulations/testShort2/
+lcd D:\output\11_nP_40_zoom_2
+mput -r restart

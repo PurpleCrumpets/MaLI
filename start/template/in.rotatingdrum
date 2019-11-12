@@ -1,0 +1,834 @@
+### Rotating Drum Simulation
+# This simulation involves the filling of a rotary drum with a binary mixture.
+# The mixture is initially segregated by a divider. The drum is rotated
+# horizontally and vibrated to spread the particles equally along the length of 
+# the drum. The divider is removed before the drum is rotated along its 
+# longitudinal axis 
+
+
+#echo log
+#modify_timing on
+
+
+################################################################################
+################################################################################
+### Initialisation
+################################################################################
+################################################################################
+
+
+
+################################################################################
+##  I1  Initialisation - Import Parameters from data.head
+################################################################################
+
+print "----> Importing Variables..."
+include data.head
+
+
+################################################################################
+##  I2  Initialisation - Preliminaries
+################################################################################
+
+# Atom Stype Properties
+atom_style  sphere               # Spherical atom style in simulation
+variable atommod equal ${neighdim}/2
+atom_modify sort 1000 ${atommod} # Spatial sorting of atoms every N time-steps
+
+# Boundary Style of Simulation Domain
+if "(${simdim} == 2) && (${periodicbb} == 1)" then "boundary f p f" &
+	else "boundary f f f" # f -> non-periodic, fixed; p -> periodic
+
+# Newton's 3rd Law
+newton	    off             # Off for DEM sim with only short-range interactions
+
+# Style of Inter-processor Communication
+communicate single vel yes  # Proc gets info on ghost atoms outside sub-domain 
+
+# Set Units
+units       si              # SI units (ie kg, m, s)
+
+# Drum Length
+if "${simdim} == 2" then "variable lengthdrum equal ${lengthdrum2D}" else &
+	"variable lengthdrum equal ${lengthdrum3D}"
+
+# Processor Layout
+if "${autoproc} == 1" then "processors * * *" &
+elif "${xproc} == 0"       "processors * ${yproc} ${zproc}" &
+elif "${yproc} == 0"       "processors ${xproc} * ${zproc}" &
+elif "${zproc} == 0"       "processors ${xproc} ${yproc} *" &
+else "processors ${xproc} ${yproc} ${zproc}"
+
+# Neighbour Listing
+neighbor     ${neighdim} bin # Size of neighbour list, default for SI 0.001 m.
+# Algorithm used to build list is bin, scales with # of atoms/# of processors
+neigh_modify delay 0 # How often neighbour list is calcuated 
+
+
+################################################################################
+##  I3  Initialisation - Declare Domain
+################################################################################
+
+# Domain Limits (m)
+variable limit1  equal (${widthdrum}/2)+0.006 # Min +/- x/z-direction
+variable limit5  equal ${lengthdrum}+0.001    # + y-direction (remove divider)
+
+if "${simdim} == 3" then &
+	"variable limit2 equal ${thickcap}+0.036" &
+	"variable limit6 equal ${lengthdrum}+${thickcap}+0.201" & 
+else 	"variable limit2 equal ${thickcap}+0.001" &                 
+	"variable limit6 equal ${lengthdrum}+${thickcap}+0.001"   
+# limit2 min -y-direction 0.036  limit6 0.201
+variable limit8  equal ${lengthdrum}+0.01
+
+# Extrude length of region of insertion
+variable limit11 equal 0.1
+if "(${proc} > 16)" then "variable limit11 equal 2*${limit11}" &
+	"variable insertionrate equal ${insertionrate}/4"
+
+variable limit3  equal ${limit8}+${limit11}+0.01 # - y-dir filling drum
+
+# Limits for Vibration of Drum
+variable limit4  equal ${thickcap}+${yamplitude}+0.01 # -ve y
+variable limit7  equal ${thickcap}+${yamplitude}+${lengthdrum}+0.01 # +ve y
+variable limit12 equal ${limit1}+2*${xamplitude} # Max +/- x-direction
+variable limit13 equal ${limit1}+2*${zamplitude} # Max +/- z-direction
+
+# Limits for Periodic Domain
+variable limit9  equal ${lengthdrum} # Min - y-direction (periodic boundary)
+variable limit10 equal 0             # Min + y-direction (periodic boundary)
+
+
+## Simulation Domain
+region domain block -${limit1} ${limit1} &
+		    -${limit3} ${limit2} &
+	            -${limit1} ${limit1} units box # -x,+x,-y,+y,-z,+z (m)
+create_box 5 domain # 5 different material types (PP, GL, DW, DE1, DE2) 
+
+
+################################################################################
+##  I4  Initialisation - Material, Interaction Properties (PP, GL, DW, DE1, DE2)
+################################################################################
+
+# Young's Modulus
+fix m1 all property/global youngsModulus peratomtype &
+${ymPP} ${ymGL} ${ymDW} ${ymDE1} ${ymDE2}
+hard_particles yes # Allow for Youngs Modulus > 1e9 Pa
+
+# Poisson's Ratio
+fix m2 all property/global poissonsRatio peratomtype &
+${prPP} ${prGL} ${prDW} ${prDE1} ${prDE2}
+
+# Coefficient of Restitution (CoR)
+fix m3 all property/global coefficientRestitution peratomtypepair 5 &
+${CoR_PP_PP}  ${CoR_PP_GL}  ${CoR_PP_DW}  ${CoR_PP_DE1}  ${CoR_PP_DE2}  &
+${CoR_PP_GL}  ${CoR_GL_GL}  ${CoR_GL_DW}  ${CoR_GL_DE1}  ${CoR_GL_DE2}  &
+${CoR_PP_DW}  ${CoR_GL_DW}  ${CoR_DW_DW}  ${CoR_DW_DE1}  ${CoR_DW_DE2}  &
+${CoR_PP_DE1} ${CoR_GL_DE1} ${CoR_DW_DE1} ${CoR_DE1_DE1} ${CoR_DE1_DE2} &
+${CoR_PP_DE2} ${CoR_GL_DE2} ${CoR_DW_DE2} ${CoR_DE1_DE2} ${CoR_DE2_DE2} 
+
+# Coefficient of Static Friction (CoSF)
+fix m4 all property/global coefficientFriction peratomtypepair 5 &
+${CoSF_PP_PP}  ${CoSF_PP_GL}  ${CoSF_PP_DW}  ${CoSF_PP_DE1}  ${CoSF_PP_DE2}  &
+${CoSF_PP_GL}  ${CoSF_GL_GL}  ${CoSF_GL_DW}  ${CoSF_GL_DE1}  ${CoSF_GL_DE2}  &
+${CoSF_PP_DW}  ${CoSF_GL_DW}  ${CoSF_DW_DW}  ${CoSF_DW_DE1}  ${CoSF_DW_DE2}  &
+${CoSF_PP_DE1} ${CoSF_GL_DE1} ${CoSF_DW_DE1} ${CoSF_DE1_DE1} ${CoSF_DE1_DE2} &
+${CoSF_PP_DE2} ${CoSF_GL_DE2} ${CoSF_DW_DE2} ${CoSF_DE1_DE2} ${CoSF_DE2_DE2} 
+
+# Coefficient of Rolling Friction (CoRF)
+fix m5 all property/global coefficientRollingFriction peratomtypepair 5 &
+${CoRF_PP_PP}  ${CoRF_PP_GL}  ${CoRF_PP_DW}  ${CoRF_PP_DE1}  ${CoRF_PP_DE2}  &
+${CoRF_PP_GL}  ${CoRF_GL_GL}  ${CoRF_GL_DW}  ${CoRF_GL_DE1}  ${CoRF_GL_DE2}  &
+${CoRF_PP_DW}  ${CoRF_GL_DW}  ${CoRF_DW_DW}  ${CoRF_DW_DE1}  ${CoRF_DW_DE2}  &
+${CoRF_PP_DE1} ${CoRF_GL_DE1} ${CoRF_DW_DE1} ${CoRF_DE1_DE1} ${CoRF_DE1_DE2} &
+${CoRF_PP_DE2} ${CoRF_GL_DE2} ${CoRF_DW_DE2} ${CoRF_DE1_DE2} ${CoRF_DE2_DE2} 
+
+# Particle Diameter
+variable diaPP equal 2*${radiusPP}
+variable diaGL equal 2*${radiusGL}
+
+
+################################################################################
+##  I5  Initialisation - Particle Insertion 
+################################################################################
+
+# Number of Particles based on filling degree (assume same radius)
+variable totalparticles equal (3/4)*(${fillingdegree}*(1-${porosity}))*((((${iddrum}/2)^2)*${lengthdrum})/(${radiusPP}^3))
+variable numglass equal floor(${volfracGL}*${totalparticles}) # Glass
+variable numPP equal floor(${volfracPP}*${totalparticles})    # PP
+
+# Particle Template
+fix pts1 all particletemplate/sphere 123457   atom_type 1 density constant &
+${densityPP} radius constant ${radiusPP} # PP particles
+fix pts2 all particletemplate/sphere 15485863 atom_type 2 density constant &
+${densityGL} radius constant ${radiusGL} # Glass particles
+
+# Particle Distributions
+fix pdd1 all particledistribution/discrete 8593931  1 pts1 1.0
+fix pdd2 all particledistribution/discrete 15485867 1 pts2 1.0
+
+# Particle Insertion Velocity
+if "${simdim} == 2" then "variable particleVel equal 0.02" else &
+	"variable particleVel equal 1" # Slower for 2D to minimise bouncing
+
+# Region of Insertion (cad1 - PP)
+fix cad1 all mesh/surface file meshes/factory_input1.stl type 3 scale 0.01 &
+rotate axis 1 0 0 angle 90 move 0.001 -${limit8} 0
+fix ins1 all insert/stream seed 32452843 distributiontemplate pdd1 &
+nparticles ${numPP} particlerate ${insertionrate} overlapcheck yes &
+vel constant 0 ${particleVel} 0 insertion_face cad1 extrude_length ${limit11}
+
+# Region of Insertion (cad2 - Glass)
+fix cad2 all mesh/surface file meshes/factory_input2.stl type 3 scale 0.01 &
+rotate axis 0 0 1 angle 180 rotate axis 1 0 0 angle 90 move -0.001 -${limit8} 0 
+fix ins2 all insert/stream seed 32452843 distributiontemplate pdd2 &
+nparticles ${numglass} particlerate ${insertionrate} overlapcheck yes &
+vel constant 0 ${particleVel} 0 insertion_face cad2 extrude_length ${limit11}
+
+
+################################################################################
+##  I6  Initialisation - Import Mesh from CAD file as Atom Type 3 (PMMA)
+################################################################################
+
+# Import 2D/3D Drum (cad3)
+if "${simdim} == 2" then &
+	"fix cad3 all mesh/surface file meshes/rotating_drum2D.stl &
+	type 3 scale 0.001 rotate axis 1 0 0 angle 90" else &
+	"fix cad3 all mesh/surface file meshes/rotating_drum.stl   &
+	type 3 scale 0.001 rotate axis 1 0 0 angle 90"
+
+# Import Bottom Lid with Cutout (cad4)
+fix cad4 all mesh/surface file meshes/bottom_lid_with_slit.stl type 5 &
+scale 0.001 rotate axis 1 0 0 angle 90 move 0 ${thickcap} 0
+
+# Import 2D/3D Divider (cad5)
+if "${simdim} == 2" then &
+	"fix cad5 all mesh/surface file meshes/divider2D.stl &
+	type 3 scale 0.001 rotate axis 1 0 0 angle 90 move 0 0 0" else &
+	"fix cad5 all mesh/surface file meshes/divider.stl &
+	type 3 scale 0.001 rotate axis 1 0 0 angle 90 move 0 0 0"
+
+# Import Top Lid without Cutout (cad6)
+fix cad6 all mesh/surface file meshes/top_lid.stl type 4 scale 0.001 &
+rotate axis 1 0 0 angle 90 move 0 -${lengthdrum} 0
+
+# Contact Model for Geometry
+fix geometry all wall/gran model hertz tangential history &
+rolling_friction epsd2 mesh n_meshes 3 meshes cad3 cad4 cad5
+
+
+################################################################################
+##  I7  Initialisation - Detailed Settings
+################################################################################
+
+# Define Physics
+pair_style gran model hertz tangential history cohesion off &
+	rolling_friction epsd2 surface default
+# Hertz without cohesion inc rolling friction
+pair_coeff * *       # Indicate all particles interact via granular potential
+
+# Integrator
+fix integrate all nve/sphere # Constant number, volume, energy
+
+# Gravity
+fix grav all gravity 9.81 vector 0.0 1.0 0.0 # Gravity in +ve Y-direction
+
+# Time-step Size
+timestep ${ts} # Less than, equal to 20% of Rayleigh time-step
+
+# Current Time-step
+variable now equal step # When referred to as 'v_now' gives current time-step
+
+# Thermodynamic Output Settings
+variable        thermofreq equal round(${thermostep}/${ts}) # (time-steps)
+compute		cp1 all erotate/sphere
+thermo_style	custom step atoms ke c_cp1 spcpu vol
+thermo          ${thermofreq}
+thermo_modify	lost warn norm no flush yes
+# Check for lost atoms, thermo not normalised
+
+# Check Time-step Size, Initialise Dump File
+fix ts_check all check/timestep/gran 1 0.1 0.1
+run 1
+unfix ts_check
+
+# Record Rotational Velocity of Drum
+variable omegaiter equal 0 # Initial rotational speed of drum (time-step = 1)
+
+# Determine if VTK Output Saved (1)
+if "(${produceVTK} == 0)" then "jump in.rotatingdrum dumpstlskip1"
+
+# Initial Conditions Geometry/Particle/Image Dump
+write_dump all custom/vtk post/particles_*.vtk &
+id type radius x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz
+write_dump all mesh/stl post/dump_factory_*.stl cad1 cad2
+write_dump all mesh/stl post/dump_drum_*.stl cad3 cad5
+write_dump all mesh/stl post/dump_ends_*.stl cad4
+
+
+# Create Periodic Geometry/Particle/Image Dump
+dump dumpstl0 all custom/vtk ${thermofreq} post/particles_*.vtk &
+id type radius x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz
+dump dumpstl2 all mesh/stl   ${thermofreq} post/dump_factory_*.stl cad1 cad2
+dump dumpstl3 all mesh/stl   ${thermofreq} post/dump_drum_*.stl cad3 cad5
+dump dumpstl4 all mesh/stl   ${thermofreq} post/dump_ends_*.stl cad4 
+
+# Dump STL Skip 1
+label dumpstlskip1
+
+# Writing Drum Rotational Speed to File
+print "${omegaiter}" screen no append post/drum_rotational_velocity.txt # Init
+fix rotdrum all print ${thermofreq} "${omegaiter}" screen no &
+title none append post/drum_rotational_velocity.txt
+
+# Print System Information
+info communication time out log 
+
+
+
+################################################################################
+################################################################################
+### Execution
+################################################################################
+################################################################################
+
+
+
+################################################################################
+##  E1  Execution - Filling Drum
+################################################################################
+
+# Filling Run Time 
+if "${numglass} > ${numPP}" then "variable num equal ${numglass}" &
+	else "variable num equal ${numPP}"
+variable runsteps equal &
+	round((0.2/${ts})+((${numPP}/${insertionrate})/${ts})) # (time-steps)
+
+# Run Simulation
+print "----> Filling Drum..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+
+## Check if all Particles in Drum
+if "${simdim} == 2" then "variable runsteps equal round(1/${ts})" else &
+	"variable runsteps equal round(0.1/${ts})" # (1 or 0.1 seconds)
+variable position1 equal -bound(all,ymin)
+
+# Addition Run Time for Filling Loop
+label loop1
+	print "----> Checking Particle Position..."
+	if "${position1} < ${lengthdrum}" &
+	then "print '----> All particles in drum...' " &
+	"jump in.rotatingdrum endloop1"
+
+	# Run Simulation
+	print "----> Particles not all in drum, continuing loop..."	
+	run ${runsteps} # Check position again in 1 or 0.1 seconds
+
+jump in.rotatingdrum loop1
+label endloop1
+
+
+## Add Top Lid to Drum
+print "----> Adding Top to Drum..."
+
+# Remove Geometry Contact Model, Dump Commands
+unfix geometry
+
+if "(${produceVTK} == 0)" then "jump in.rotatingdrum dumpstlskip2" # (2)
+undump dumpstl2
+undump dumpstl3
+undump dumpstl4
+
+label dumpstlskip2
+
+# New Contact Model for Geometry, New Dump Commands
+fix geometry all wall/gran model hertz tangential history &
+rolling_friction epsd2 mesh n_meshes 4 meshes cad3 cad4 cad5 cad6
+
+if "(${produceVTK} == 0)" then "jump in.rotatingdrum dumpstlskip3" # (3)
+dump dumpstl5 all mesh/stl ${thermofreq} post/dump_drum_*.stl cad3 cad5
+dump dumpstl6 all mesh/stl ${thermofreq} post/dump_ends_*.stl cad4 cad6
+
+label dumpstlskip3
+
+# Remove Region of Insertion from Simulation (cad1, cad2)
+unfix ins2
+unfix ins1
+unfix cad1
+unfix cad2
+
+# Additional Run Time to Prevent System Error
+run 1 # This run command is required for some reason
+
+# Change Domain Limits
+change_box all y final -${limit6} ${limit2} units box
+
+
+################################################################################
+##  E2  Execution - Allow Particles to Settle (1)
+################################################################################
+
+# Settling Run Time
+variable settle equal 1.5                      # (seconds)
+variable runsteps equal round(${settle}/${ts}) # (time-steps)
+
+# Run Simulation 
+print "----> Allowing Particles to Settle (1)..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Create Restart File (1)
+print "----> Writing Restart File (1)..."
+write_restart restart/1_filled_drum.restart
+
+
+################################################################################
+##  E3  Execution - 'Rotate' Gravity to Vertical Direction
+################################################################################
+
+# Angular Velocity of Drum Rotation
+variable omega1 equal PI/(2*${rotTime}) # (rad/s)
+
+# Rotation Run Time
+variable runsteps equal round(${rotTime}/${ts}) # (time-steps)
+
+# Current Time-Step
+variable imstep   equal ${now} # (time-steps)
+
+# 'Rotate' Gravity
+variable angle equal (90*PI/180)*(((step-${imstep})*dt)/${rotTime})
+variable gravY equal cos(v_angle) # Served with roast beef
+variable gravZ equal -sin(v_angle)
+
+# New Gravity Fix
+unfix grav
+fix grav all gravity 9.81 vector 0.0 v_gravY v_gravZ # Rotate Gravity
+
+# Run Simulation
+print "----> Rotating Gravity to Vertical Direction..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+print "${angle} ${gravY} ${gravZ}"
+
+# Fix Gravity in Z-Direction
+unfix grav
+fix grav all gravity 9.81 vector 0.0 0.0 -1.0 # Gravity in -ve Z-Direction
+
+# Remove Surplus Variables
+variable gravY delete
+variable gravZ delete
+variable angle delete
+
+# Additional Run Time to Prevent System Error
+run 1
+
+
+################################################################################
+##  E4  Execution - Allow Particles to Settle (2)
+################################################################################
+
+# Settling Run Time
+variable settle equal 1                        # (seconds)
+variable runsteps equal round(${settle}/${ts}) # (time-steps)
+
+# Run Simulation
+print "----> Allowing Particles to Settle (2)..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Create Restart File (2)
+print "----> Writing Restart File (2)..."
+write_restart restart/2_pre_vibrate.restart
+
+
+################################################################################
+##  E5  Execution - Level Particles (Longitudinal Rotation of Drum)
+################################################################################
+
+# Period of Drum Rotation
+variable periodrotMix equal 60/${rpmMix}        # (seconds)
+
+# Angular Velocity of Drum Rotation
+variable omegaiter equal (2*PI)/${periodrotMix} # (rad/s)
+
+# Rotate Geometry
+fix movecad1 all move/mesh mesh cad3 rotate origin 0 0 0 axis 0 1 0 & 
+period ${periodrotMix}
+fix movecad2 all move/mesh mesh cad4 rotate origin 0 0 0 axis 0 1 0 & 
+period ${periodrotMix}
+fix movecad3 all move/mesh mesh cad5 rotate origin 0 0 0 axis 0 1 0 & 
+period ${periodrotMix}
+fix movecad4 all move/mesh mesh cad6 rotate origin 0 0 0 axis 0 1 0 & 
+period ${periodrotMix}
+
+# Rotation Run Time
+variable runsteps equal &
+	round((${periodrotMix}*${numrotMix})/${ts}) # (time-steps)
+
+# Run Simulation
+print "----> Rotating Drum (Levelling Particles)..." 
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Stop Rotation of Geometry
+unfix movecad1
+unfix movecad2
+unfix movecad3
+unfix movecad4
+
+# Reset Angular Velocity of Drum 
+variable omegaiter equal 0
+
+################################################################################
+##  E6  Execution - Allow Particles to Settle (3)
+################################################################################
+
+# Settling Run Time
+variable settle equal 0.5                      # (seconds)
+variable runsteps equal round(${settle}/${ts}) # (time-steps)
+
+# Run Simulation 
+print "----> Allowing Particles to Settle (3)..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+
+################################################################################
+##  E7  Execution - Level Particles (Vibrate Drum)
+################################################################################
+
+# Change Domain Limits
+change_box all y final -${limit7} ${limit4} units box # y-direction
+
+print "xamplitude: ${xamplitude}"
+print "zamplitude: ${zamplitude}"
+
+if "(${xamplitude} > 0)" then &
+	"change_box all x final -${limit12} ${limit12} units box" # x-direction
+
+if "(${zamplitude} > 0)" then &
+	"change_box all z final -${limit13} ${limit13} units box" # z-direction 
+
+# Period of Drum Vibration
+variable periodvib equal 1/${frequencyvib} # (seconds)
+
+# Vibrate Geometry
+fix movecad1 all move/mesh mesh cad3 wiggle amplitude ${xamplitude} &
+${yamplitude} ${zamplitude} period ${periodvib}
+fix movecad2 all move/mesh mesh cad4 wiggle amplitude ${xamplitude} &
+${yamplitude} ${zamplitude} period ${periodvib}
+fix movecad3 all move/mesh mesh cad5 wiggle amplitude ${xamplitude} &
+${yamplitude} ${zamplitude} period ${periodvib}
+fix movecad4 all move/mesh mesh cad6 wiggle amplitude ${xamplitude} &
+${yamplitude} ${zamplitude} period ${periodvib}
+
+# Vibration Run Time
+variable runsteps equal round(${cyclevib}*${periodvib}/${ts}) # (time-steps)
+
+# Run Simulation
+print "----> Vibrating Drum..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Stop Vibration of Geometry
+unfix movecad1
+unfix movecad2
+unfix movecad3
+unfix movecad4
+
+# Change Domain Limits
+change_box all y final -${limit6} ${limit2} units box
+
+if "(${xamplitude} > 0)" then &
+	"change_box all x final -${limit1} ${limit1} units box" # x-direction
+
+if "(${zamplitude} > 0)" then &
+	"change_box all z final -${limit1} ${limit1} units box" # z-direction 
+
+
+################################################################################
+##  E8  Execution - Allow Particles to Settle (4)
+################################################################################
+
+# Settling Run Time
+variable settle equal 1.5                      # (seconds)
+variable runsteps equal round(${settle}/${ts}) # (time-steps)
+
+# Run Simulation
+print "----> Allowing Particles to Settle (4)..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Change Domain Limits
+change_box all y final -${limit6} ${limit5} units box
+
+# Create Restart File (3)
+print "----> Writing Restart File (3)..."
+write_restart restart/3_post_vibrate.restart
+
+# Additional Run Time to Prevent System Error
+#run 1
+
+
+################################################################################
+##  E9  Execution - Remove Divider 
+################################################################################
+
+# Remove Divider
+fix movecad1 all move/mesh mesh cad5 linear 0 ${dividerspeed} 0 
+
+# Removing Divider Run Time
+variable divdist equal ${lengthdrum} # 
+variable runsteps equal round((${divdist}/${dividerspeed})/${ts}) # (time-steps)
+
+# Run Simulation
+print "----> Removing Divider..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Stop Divider Movement
+unfix movecad1
+
+# Remove Geometry Contact Model, Dump Commands
+unfix geometry
+
+if "(${produceVTK} == 0)" then "jump in.rotatingdrum dumpstlskip4" # (4)
+undump dumpstl5
+undump dumpstl6
+
+label dumpstlskip4
+
+# Remove Divider from Simulation (cad5)
+unfix cad5
+
+# Remove Top, Bottom Lid from Simulation if 2D Drum with Periodic Domain Used
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+	"unfix cad4" &
+	"unfix cad6" &
+	"fix geometry all wall/gran model hertz tangential history &
+	rolling_friction epsd2 mesh n_meshes 1 meshes cad3" &
+elif "(${simdim} == 2) && (${periodicbb} == 0)" &
+	"fix geometry all wall/gran model hertz tangential history &
+	rolling_friction epsd2 mesh n_meshes 3 meshes cad3 cad4 cad6" &
+else "fix geometry all wall/gran model hertz tangential history &
+	rolling_friction epsd2 mesh n_meshes 3 meshes cad3 cad4 cad6"
+
+# Imaging Commands
+if "(${produceVTK} == 0)" then "jump in.rotatingdrum dumpstlskip5" # (5)
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+	"dump dumpstl7 all mesh/stl ${thermofreq} post/dump_drum_*.stl cad3" &
+elif "(${simdim} == 2) && (${periodicbb} == 0)" &
+	"dump dumpstl7 all mesh/stl ${thermofreq} post/dump_drum_*.stl cad3" &
+   "dump dumpstl8 all mesh/stl ${thermofreq} post/dump_ends_*.stl cad4 cad6" &
+else "dump dumpstl7 all mesh/stl ${thermofreq} post/dump_drum_*.stl cad3" &
+     "dump dumpstl8 all mesh/stl ${thermofreq} post/dump_ends_*.stl cad4 cad6"
+
+label dumpstlskip5
+
+# Change Domain 
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+	"run 1" &
+	"change_box all y final -${limit9} ${limit10} units box" &
+elif "(${simdim} == 2) && (${periodicbb} == 0)" &
+	"run 1" &
+	"change_box all y final -${limit6} ${limit2} units box" &
+else	"run 1" &
+	"change_box all y final -${limit6} ${limit2} units box"
+
+#	"change_box all y final -1 1 units box"
+#write_dump all custom/vtk post/particles_*.vtk &
+#id type radius x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz
+#write_dump all mesh/stl post/dump_drum_*.stl cad3
+#write_dump all mesh/stl post/dump_ends_*.stl cad4 cad6
+
+
+################################################################################
+##  E10  Execution - Allow Particles to Settle (5)
+################################################################################
+
+# Settling Run Time
+variable settle equal 1                        # (seconds)
+variable runsteps equal round(${settle}/${ts}) # (time-steps)
+
+# Run Simulation 
+print "----> Allowing Particles to Settle (5)..."
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+
+################################################################################
+##  E11  Execution -Set Time-Step to be Multiple of 'thermofreq'
+################################################################################
+
+# Obtain Required Run Time
+variable test     equal step/${thermofreq}    # (-)
+variable test     equal ceil(${test})         # (-)
+variable runsteps equal ${thermofreq}*${test} # (run-steps)
+
+# Run Simulation 
+print "----> Run Simulation to Make ..."
+run ${runsteps} upto
+
+# New Imaging Command
+include imaging.data
+
+# Create Restart File (4)
+print "----> Writing Restart File (4)..."
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+"write_restart restart/2D_periodic.restart" &
+elif "(${simdim} == 2) && (${periodicbb} == 0)" &
+"write_restart restart/2D_non_periodic.restart" else &
+"write_restart restart/3D.restart"
+
+
+################################################################################
+##  E12  Execution - Rotation of Drum Around Longitudinal Axis - Initial Cond.
+################################################################################
+
+# Record Current Time-Step to File 
+print "${now}" screen no append post/start_rotating.txt
+
+# Obtain RPM, Times from Input File 'rpm_drum.txt' 
+variable input file rpm_drum.txt
+
+# Initial Conditions
+variable timeAccel1 equal ${input} # Likely 0 (seconds)
+next input
+variable rpmDrum1 equal ${input} # Likely 0 (rpm)
+next input
+
+# Drum Rotation Direction
+if "(${rotDirection} == 0)" then "variable rpmDrum1 equal  ${rpmDrum1}" &
+elif "(${rotDirection} == 1)"    "variable rpmDrum1 equal -${rpmDrum1}" 
+
+# Convert Initial RPM to Angular Velocity
+variable angVel1    equal ${rpmDrum1}*(PI/30) # (rad/s)
+
+# Initial Loop Count
+variable count      equal 1
+
+
+################################################################################
+##  E13  Execution - Rotation of Drum Around Longitudinal Axis - Loop
+################################################################################
+
+label loop2
+
+# Loop Count
+print "----> Drum Rotation Loop Count: ${count}"
+
+# Calibration Imaging Command
+include imaging.data
+
+# Obtain New RPM and Time
+variable timeAccel2 equal ${input} # (seconds)
+next input
+variable rpmDrum2 equal ${input} # (rpm)
+next input
+
+# Drum Rotation Direction
+if "(${rotDirection} == 0)" then "variable rpmDrum2 equal  ${rpmDrum2}" &
+elif "(${rotDirection} == 1)"    "variable rpmDrum2 equal -${rpmDrum2}" 
+
+# Convert RPM to Angular Velocity
+variable angVel2    equal ${rpmDrum2}*(PI/30) # (rad/s)
+
+# Obtain Change in Time, Calculate Corresponding Run Time
+variable deltaTime  equal ${timeAccel2}-${timeAccel1} # (seconds)
+variable runsteps   equal round(${deltaTime}/dt)      # (time-steps)
+
+# Current Time-Step
+variable imstep10   equal ${now} # (time-steps)
+
+# Angular Velocity
+if "(${angVel1} == ${angVel2})" then "variable omegaiter equal ${angVel2}" &
+else "variable omegaiter equal &
+      ${angVel1}+((${angVel2}-${angVel1})*((step-${imstep10})*dt)/${deltaTime})"
+
+# Rotate Geometry 
+fix movecad1 all move/mesh mesh cad3 rotate/variable origin 0 0 0 axis 0 1 0 &
+omega v_omegaiter
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then "print ''" else &
+"fix movecad2 all move/mesh mesh cad4 rotate/variable origin 0 0 0 axis 0 1 0 &
+omega v_omegaiter" &
+"fix movecad3 all move/mesh mesh cad6 rotate/variable origin 0 0 0 axis 0 1 0 &
+omega v_omegaiter"
+
+# Run Simulation, Increment Loop Count
+print "----> Rotating Drum Loop Number: ${count}..."
+variable count      equal ${count}+1
+run ${runsteps}
+
+# Print System Information
+info communication time out log 
+
+# Stop Rotation of Geometry
+unfix movecad1
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then "print ''" else &
+"unfix movecad2" &
+"unfix movecad3"
+
+# New Angular Velocity and Time
+variable timeAccel1 equal ${timeAccel2}
+variable angVel1    equal ${angVel2}
+
+# Restart Loop
+jump in.rotatingdrum loop2
+
+# End of Drum Rotation Loop
+label endloop2
+
+
+################################################################################
+##  E14  Execution - Rotation of Drum Around Longitudinal Axis - Save Restart
+################################################################################
+
+## Record current time-step to file 
+print "${now}" screen no append post/start_rotating.txt
+
+# Create Restart File (5)
+print "----> Writing Final Restart File (5)..."
+
+if "(${simdim} == 2) && (${periodicbb} == 1)" then &
+"write_restart restart/END_2D_periodic.restart" &
+elif "(${simdim} == 2) && (${periodicbb} == 0)" &
+"write_restart restart/END_2D_non_periodic.restart" else &
+"write_restart restart/END_3D.restart"
+
+
+print "----> Simulation Finished!"
+
+
+
+################################################################################
+################################################################################
+## Simulation Finished
+################################################################################
+################################################################################

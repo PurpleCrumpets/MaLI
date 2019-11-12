@@ -1,0 +1,49 @@
+## Calibration Imaging Information
+# Fixed camera viewing the rotation of the drum. No change in camera
+# angle during this period, constant zoom. The focus point is the centre of 
+# rotation.
+
+################################################################################
+# Start Imaging Command (calibration)
+################################################################################
+
+print "----> Opened imaging_calibration.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 1) || (${imaging} == 2)" then & 
+	"jump imaging/imaging_calibration.data endImjump"
+
+# Check Loop Count
+if "(${count} < 3) || (${count} > 3)" then &
+	"jump imaging/imaging_calibration.data endImjump"
+
+# Drum Absolute Position
+variable drumPosXR1 equal 0                  # (metres)
+variable drumPosYR1 equal -(${lengthdrum}/2) # (metres)
+variable drumPosZR1 equal 0                  # (metres)
+
+# Camera Information
+variable thetaR1    equal 90  # (degrees)
+variable phiR1      equal 270 # (degrees)
+if "(${simdim} == 2)" then "variable zoomR1 equal 2.8" else &
+	"variable zoomR1 equal 4.6"
+
+# Centre Using Current CS
+variable centreXR1 equal (${drumPosXR1}+${limit1})/(${limit1}+${limit1}) # (-) 
+variable centreYR1 equal (${drumPosYR1}+${limit7})/(${limit4}+${limit7}) # (-)
+variable centreZR1 equal (${drumPosZR1}+${limit1})/(${limit1}+${limit1}) # (-)
+
+# Imaging Command
+dump dumpimageR1 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom ${zoomR1} size 1080 1080 view ${thetaR1} ${phiR1} &
+	center s ${centreXR1} ${centreYR1} ${centreZR1} shiny 0
+dump_modify dumpimageR1 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (calibration)
+################################################################################

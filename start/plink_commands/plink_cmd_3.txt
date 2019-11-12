@@ -1,0 +1,2 @@
+cd ~/MYLIGGGHTS/simulations/
+ls

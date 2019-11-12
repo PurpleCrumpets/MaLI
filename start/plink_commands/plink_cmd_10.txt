@@ -1,0 +1,2 @@
+cd ~/MYLIGGGHTS/simulations/09_02_restart_test
+./job3.script

@@ -1,0 +1,71 @@
+## New Imaging Information (8)
+
+# During the removal of the divider, the camera position is fixed. The location 
+# of the drum is updated due to the change in the boundary box.
+
+################################################################################
+# Start Imaging Command (8)
+################################################################################
+
+print "Opened imaging8.data"
+label Imjump
+
+# Check if Imaging Command Given
+if "(${imaging} == 0) || (${imaging} == 2) || (${imaging} == 3)" then &
+	"jump imaging/imaging8.data endImjump"
+
+# Prepare for New Imaging Command
+undump dumpimage7 # Removing old imaging command
+variable imstep8    equal ${now} # Current timestep
+
+# Drum Absolute Position
+variable drumPosX8  equal 0                  # (metres)
+variable drumPosY8  equal -(${lengthdrum}/2) # (metres)
+variable drumPosZ8  equal 0                  # (metres)
+
+# Camera Information
+variable theta8     equal 90  # (degrees)
+variable phi8       equal 270 # (degrees)
+
+variable centreX8   equal (${drumPosX8}+${limit1})/(${limit1}+${limit1}) # (-)
+variable centreY8   equal (${drumPosY8}+${limit7})/(${limit4}+${limit7}) # (-)
+variable centreZ8   equal (${drumPosZ8}+${limit1})/(${limit1}+${limit1}) # (-)
+
+# Calculate New Zoom
+variable delX8      equal 2*(${limit1}+${limit1}) # (metres)
+variable delY8      equal 2*(${limit4}+${limit7}) # (metres)
+variable delZ8      equal 2*(${limit1}+${limit1}) # (metres)
+variable maxDel8    equal 2*(${limit4}+${limit7}) # y-direction (metres)
+
+variable camDir08   equal sin(${theta8}*PI/180)*cos(${phi8}*PI/180)
+variable camDir18   equal sin(${theta8}*PI/180)*sin(${phi8}*PI/180)
+variable camDir28   equal cos(${theta8}*PI/180)
+
+variable zdistPart8 equal (${maxDel8}/tan(${FOV})+(0.5*(${camDir08}*${delX8}+${camDir18}*${delY8}+${camDir28}*${delZ8})))
+
+variable zoom8      equal ${zdistPart8}/${zdist7}
+variable zdist8     equal ${zdistPart8}/${zoom8}
+
+# New Imaging Command
+dump dumpimage8 all image $(v_thermofreq) images/image_*.ppm type type &
+	zoom ${zoom8} size 1080 1080 view ${theta8} ${phi8} &
+	center s ${centreX8} ${centreY8} ${centreZ8} box no 0.1 shiny 0 
+dump_modify dumpimage8 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+# Print zdist Output
+print "zdist1 = ${zdist1}"
+print "zdist2 = ${zdist2}" 
+print "zdist3 = ${zdist3}" 
+print "zdist4 = ${zdist4}"
+print "zdist5 = ${zdist5}"
+print "zdist6 = ${zdist6}"
+print "zdist7 = ${zdist7}"
+print "zdist8 = ${zdist8}"
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command (8)
+################################################################################

@@ -1,0 +1,3 @@
+cd ~/MYLIGGGHTS/simulations/
+rm -rf 12_11_test2
+mkdir -p 12_11_test2/{post,restart,images}

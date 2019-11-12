@@ -1,0 +1,100 @@
+solid Created by Gmsh
+facet normal 0 0 -1
+  outer loop
+    vertex 6.06218 -3.5 0
+    vertex 3.5 -3.88578e-016 0
+    vertex 7 -7.77156e-016 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 0 -7 0
+    vertex 0 -3.5 0
+    vertex 3.5 -6.06218 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 0 0 0
+    vertex 3.03109 -3.03109 0
+    vertex 0 -3.5 0
+  endloop
+endfacet
+facet normal -0 0 -1
+  outer loop
+    vertex 3.5 -3.88578e-016 0
+    vertex 3.03109 -3.03109 0
+    vertex 0 0 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 6.06218 -3.5 0
+    vertex 3.03109 -3.03109 0
+    vertex 3.5 -3.88578e-016 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 0 -3.5 0
+    vertex 3.03109 -3.03109 0
+    vertex 3.5 -6.06218 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 3.5 -6.06218 0
+    vertex 3.03109 -3.03109 0
+    vertex 6.06218 -3.5 0
+  endloop
+endfacet
+facet normal -0 0 -1
+  outer loop
+    vertex 3.5 6.06218 0
+    vertex 7.77156e-016 3.5 0
+    vertex 1.55431e-015 7 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 7 -7.77156e-016 0
+    vertex 3.5 -3.88578e-016 0
+    vertex 6.06218 3.5 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 0 0 0
+    vertex 3.03109 3.03109 0
+    vertex 3.5 -3.88578e-016 0
+  endloop
+endfacet
+facet normal 0 -0 -1
+  outer loop
+    vertex 7.77156e-016 3.5 0
+    vertex 3.03109 3.03109 0
+    vertex 0 0 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 3.5 6.06218 0
+    vertex 3.03109 3.03109 0
+    vertex 7.77156e-016 3.5 0
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 3.5 -3.88578e-016 0
+    vertex 3.03109 3.03109 0
+    vertex 6.06218 3.5 0
+  endloop
+endfacet
+facet normal -0 0 -1
+  outer loop
+    vertex 6.06218 3.5 0
+    vertex 3.03109 3.03109 0
+    vertex 3.5 6.06218 0
+  endloop
+endfacet
+endsolid Created by Gmsh
