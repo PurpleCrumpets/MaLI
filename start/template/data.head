@@ -45,7 +45,7 @@ variable rotDirection  equal 0    # 0 = glass leading rot, 1 = PP leading rot
 variable insertionrate equal 2000  # (particles of one type/s)
 variable volfracGL     equal 0.5   # Volume fraction of glass in bed (-)
 variable volfracPP     equal 0.5   # Volume fraction of PP in bed    (-)
-variable fillingdegree equal 0.01 # Volume filling degree of drum   (-)
+variable fillingdegree equal 0.005 # Volume filling degree of drum   (-)
 variable porosity      equal 0.36  # Porosity of bed (0.36 = random packing) (-)
 
 
@@ -105,26 +105,26 @@ variable CoR_DE1_DE2    equal 0.0501 # drum end w/o slit - drum end w slit  (-)
 
 variable CoR_DE2_DE2    equal 0.0501 # drum end w slit - drum end w slit    (-)
 #-------------------------------------------------------------------------------
-# Coefficient of Static Friction (CoSF)
-variable CoSF_PP_PP     equal 0.9000 # PP - PP                              (-)
-variable CoSF_PP_GL     equal 0.9000 # PP - glass		            (-)
-variable CoSF_PP_DW     equal 0.9000 # PP - drum wall                       (-)
-variable CoSF_PP_DE1    equal 0.9000 # PP - drum end w/o slit               (-)
-variable CoSF_PP_DE2    equal 0.9000 # PP - drum end w slit 	            (-)
+# Coefficient of Friction (CoF)
+variable CoF_PP_PP     equal 0.9000 # PP - PP                              (-)
+variable CoF_PP_GL     equal 0.9000 # PP - glass		            (-)
+variable CoF_PP_DW     equal 0.9000 # PP - drum wall                       (-)
+variable CoF_PP_DE1    equal 0.9000 # PP - drum end w/o slit               (-)
+variable CoF_PP_DE2    equal 0.9000 # PP - drum end w slit 	            (-)
 
-variable CoSF_GL_GL     equal 0.9000 # glass - glass 		            (-)
-variable CoSF_GL_DW     equal 0.9000 # glass - drum wall                    (-)
-variable CoSF_GL_DE1    equal 0.9000 # glass - drum end w/o slit            (-)
-variable CoSF_GL_DE2    equal 0.9000 # glass - drum end w slit              (-)
+variable CoF_GL_GL     equal 0.9000 # glass - glass 		            (-)
+variable CoF_GL_DW     equal 0.9000 # glass - drum wall                    (-)
+variable CoF_GL_DE1    equal 0.9000 # glass - drum end w/o slit            (-)
+variable CoF_GL_DE2    equal 0.9000 # glass - drum end w slit              (-)
 
-variable CoSF_DW_DW     equal 0      # drum wall - drum wall                (-)
-variable CoSF_DW_DE1    equal 0      # drum wall - drum end w/o slit        (-)
-variable CoSF_DW_DE2    equal 0      # drum wall - drum end w slit          (-)
+variable CoF_DW_DW     equal 0      # drum wall - drum wall                (-)
+variable CoF_DW_DE1    equal 0      # drum wall - drum end w/o slit        (-)
+variable CoF_DW_DE2    equal 0      # drum wall - drum end w slit          (-)
 
-variable CoSF_DE1_DE1   equal 0      # drum end w/o slit - drum end w/o slit(-)
-variable CoSF_DE1_DE2   equal 0      # drum end w/o slit - drum end w slit  (-)
+variable CoF_DE1_DE1   equal 0      # drum end w/o slit - drum end w/o slit(-)
+variable CoF_DE1_DE2   equal 0      # drum end w/o slit - drum end w slit  (-)
 
-variable CoSF_DE2_DE2   equal 0      # drum end w slit - drum end w slit    (-)
+variable CoF_DE2_DE2   equal 0      # drum end w slit - drum end w slit    (-)
 #-------------------------------------------------------------------------------
 # Coefficient of Rolling Friction (CoRF)
 variable CoRF_PP_PP     equal 0.0050 # PP - PP                              (-)

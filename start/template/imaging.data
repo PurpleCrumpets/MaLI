@@ -11,22 +11,31 @@ print "----> Opened imaging.data"
 label Imjump
 
 # Check if No Imaging Command Given
-if "(${imaging} == 0)" then "jump imaging.data endImjump"
+if "(${imaging} == 0)" then &
+	"jump imaging.data endImjump"
 
 # Check if Rotation of Drum Imaging Command Given
 if "(${imaging} == 1)" then & 
-	"variable imaging equal 0" &
-	"jump imaging.data Imstart"
+	"variable imaging       equal 0" &
+	"variable imagingFinish equal 1" &
+	"print '${now}' screen no append images/imaging_ts.txt" &
+	"jump imaging.data Imstart" 
 
 # Check if Calibration Imaging Command Given
-if "(${imaging} == 2) && ${count} == ${caliStart})" then & 
+if "(${imaging} == 2) && (${count} == ${caliStart})" then       & 
+	"variable imagingFinish equal 1" &
+	"print '${now}' screen no append images/imaging_ts.txt" &
 	"jump imaging.data Imstart"
 
 # End Calibration Imaging
-if "(${imaging} == 2) && ${count} == ${caliEnd})" then & 
-	"variable imaging equal 0" &
-	"undump dumpimageR1" &
+if "(${imaging} == 2) && (${count} == ${caliEnd})" then         & 
+	"variable caliStart     equal ${caliStart}+3"           &
+	"variable caliEnd       equal ${caliEnd}+3"             &
+	"variable imagingFinish equal 1" &
+	"print '${now}' screen no append images/imaging_ts.txt" &
+	"undump dumpimageR1"                                    &
 	"jump imaging.data endImjump"
+ 
 
 # Skip Imaging Commands
 jump imaging.data endImjump
