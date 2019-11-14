@@ -1,2 +1,2 @@
-cd ~/MYLIGGGHTS/simulations/createRestart50_Periodic
+cd ~/MYLIGGGHTS/simulations/2createRestart50
 /opt/torque/bin/qsub job.script

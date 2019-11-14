@@ -28,7 +28,7 @@ variable caliEnd    equal 4   # Loop count to end calibration imaging (-)
 ################################################################################ 
 ## DEM Parameters
 ################################################################################
-variable ts         equal 0.0000025  # Time-step size         (s)
+variable ts         equal 0.000005  # Time-step size         (s)
 variable neighdim   equal 0.004     # Size of neighbour list (m)
 variable thermostep equal 0.040     # Thermo time-step       (s)
 

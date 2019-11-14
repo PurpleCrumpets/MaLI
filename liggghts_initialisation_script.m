@@ -24,7 +24,7 @@ fclose('all');
 
 %% User Input Variables
 projectname = '';
-restartSource = '11_nP_40_zoom_2';
+restartSource = '';
 tail = 'no';
 % tail = 'yes';
 % restartSource= 'useCurrentFile'; % Use restart files in template dir
@@ -276,7 +276,7 @@ if strcmpi(sim_type,'restart')
     
     % Check if restart file is compatible with configured settings
     disp('Checking restart file compatability with configured settings...')
-    
+%     output = compareDataHead();
     
     % Read data.head of submitted settings. Obtain info on periodic, 2D/3D
     % settings 

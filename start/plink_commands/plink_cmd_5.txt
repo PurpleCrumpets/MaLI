@@ -1,1 +1,1 @@
-cp ~/MYLIGGGHTS/src/lmp_auto ~/MYLIGGGHTS/simulations/createRestart50_Periodic
+cp ~/MYLIGGGHTS/src/lmp_auto ~/MYLIGGGHTS/simulations/2createRestart50

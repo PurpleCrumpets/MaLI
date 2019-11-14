@@ -103,42 +103,45 @@ variable limit10 equal 0             # Min + y-direction (periodic boundary)
 region domain block -${limit1} ${limit1} &
 		    -${limit3} ${limit2} &
 	            -${limit1} ${limit1} units box # -x,+x,-y,+y,-z,+z (m)
-create_box 5 domain # 5 different material types (PP, GL, DW, DE1) 
+create_box 5 domain # 5 different material types (PP, GL, DW, DE1, DE2) 
 
 
 ################################################################################
-##  I4  Initialisation - Material, Interaction Properties (PP, GL, DW, DE1)
+##  I4  Initialisation - Material, Interaction Properties (PP, GL, DW, DE1, DE2)
 ################################################################################
 
 # Young's Modulus
 fix m1 all property/global youngsModulus peratomtype &
-${ymPP} ${ymGL} ${ymDW} ${ymDE1}
+${ymPP} ${ymGL} ${ymDW} ${ymDE1} ${ymDE2}
 hard_particles yes # Allow for Youngs Modulus > 1e9 Pa
 
 # Poisson's Ratio
 fix m2 all property/global poissonsRatio peratomtype &
-${prPP} ${prGL} ${prDW} ${prDE1}
+${prPP} ${prGL} ${prDW} ${prDE1} ${prDE2}
 
 # Coefficient of Restitution (CoR)
-fix m3 all property/global coefficientRestitution peratomtypepair 4 &
-${CoR_PP_PP}  ${CoR_PP_GL}  ${CoR_PP_DW}  ${CoR_PP_DE1}  &
-${CoR_PP_GL}  ${CoR_GL_GL}  ${CoR_GL_DW}  ${CoR_GL_DE1}  &
-${CoR_PP_DW}  ${CoR_GL_DW}  ${CoR_DW_DW}  ${CoR_DW_DE1}  &
-${CoR_PP_DE1} ${CoR_GL_DE1} ${CoR_DW_DE1} ${CoR_DE1_DE1} 
+fix m3 all property/global coefficientRestitution peratomtypepair 5 &
+${CoR_PP_PP}  ${CoR_PP_GL}  ${CoR_PP_DW}  ${CoR_PP_DE1}  ${CoR_PP_DE2}  &
+${CoR_PP_GL}  ${CoR_GL_GL}  ${CoR_GL_DW}  ${CoR_GL_DE1}  ${CoR_GL_DE2}  &
+${CoR_PP_DW}  ${CoR_GL_DW}  ${CoR_DW_DW}  ${CoR_DW_DE1}  ${CoR_DW_DE2}  &
+${CoR_PP_DE1} ${CoR_GL_DE1} ${CoR_DW_DE1} ${CoR_DE1_DE1} ${CoR_DE1_DE2} &
+${CoR_PP_DE2} ${CoR_GL_DE2} ${CoR_DW_DE2} ${CoR_DE1_DE2} ${CoR_DE2_DE2} 
 
 # Coefficient of Friction (CoF)
-fix m4 all property/global coefficientFriction peratomtypepair 4 &
-${CoF_PP_PP}  ${CoF_PP_GL}  ${CoF_PP_DW}  ${CoF_PP_DE1}  &
-${CoF_PP_GL}  ${CoF_GL_GL}  ${CoF_GL_DW}  ${CoF_GL_DE1}  &
-${CoF_PP_DW}  ${CoF_GL_DW}  ${CoF_DW_DW}  ${CoF_DW_DE1}  &
-${CoF_PP_DE1} ${CoF_GL_DE1} ${CoF_DW_DE1} ${CoF_DE1_DE1} 
+fix m4 all property/global coefficientFriction peratomtypepair 5 &
+${CoF_PP_PP}  ${CoF_PP_GL}  ${CoF_PP_DW}  ${CoF_PP_DE1}  ${CoF_PP_DE2}  &
+${CoF_PP_GL}  ${CoF_GL_GL}  ${CoF_GL_DW}  ${CoF_GL_DE1}  ${CoF_GL_DE2}  &
+${CoF_PP_DW}  ${CoF_GL_DW}  ${CoF_DW_DW}  ${CoF_DW_DE1}  ${CoF_DW_DE2}  &
+${CoF_PP_DE1} ${CoF_GL_DE1} ${CoF_DW_DE1} ${CoF_DE1_DE1} ${CoF_DE1_DE2} &
+${CoF_PP_DE2} ${CoF_GL_DE2} ${CoF_DW_DE2} ${CoF_DE1_DE2} ${CoF_DE2_DE2} 
 
 # Coefficient of Rolling Friction (CoRF)
-fix m5 all property/global coefficientRollingFriction peratomtypepair 4 &
-${CoRF_PP_PP}  ${CoRF_PP_GL}  ${CoRF_PP_DW}  ${CoRF_PP_DE1}  &
-${CoRF_PP_GL}  ${CoRF_GL_GL}  ${CoRF_GL_DW}  ${CoRF_GL_DE1}  &
-${CoRF_PP_DW}  ${CoRF_GL_DW}  ${CoRF_DW_DW}  ${CoRF_DW_DE1}  &
-${CoRF_PP_DE1} ${CoRF_GL_DE1} ${CoRF_DW_DE1} ${CoRF_DE1_DE1} 
+fix m5 all property/global coefficientRollingFriction peratomtypepair 5 &
+${CoRF_PP_PP}  ${CoRF_PP_GL}  ${CoRF_PP_DW}  ${CoRF_PP_DE1}  ${CoRF_PP_DE2}  &
+${CoRF_PP_GL}  ${CoRF_GL_GL}  ${CoRF_GL_DW}  ${CoRF_GL_DE1}  ${CoRF_GL_DE2}  &
+${CoRF_PP_DW}  ${CoRF_GL_DW}  ${CoRF_DW_DW}  ${CoRF_DW_DE1}  ${CoRF_DW_DE2}  &
+${CoRF_PP_DE1} ${CoRF_GL_DE1} ${CoRF_DW_DE1} ${CoRF_DE1_DE1} ${CoRF_DE1_DE2} &
+${CoRF_PP_DE2} ${CoRF_GL_DE2} ${CoRF_DW_DE2} ${CoRF_DE1_DE2} ${CoRF_DE2_DE2} 
 
 # Particle Diameter
 variable diaPP equal 2*${radiusPP}
@@ -195,7 +198,7 @@ if "${simdim} == 2" then &
 	type 3 scale 0.001 rotate axis 1 0 0 angle 90"
 
 # Import Bottom Lid with Cutout (cad4)
-fix cad4 all mesh/surface file meshes/bottom_lid_with_slit.stl type 4 &
+fix cad4 all mesh/surface file meshes/bottom_lid_with_slit.stl type 5 &
 scale 0.001 rotate axis 1 0 0 angle 90 move 0 ${thickcap} 0
 
 # Import 2D/3D Divider (cad5)
@@ -707,6 +710,7 @@ elif "(${simdim} == 2) && (${periodicbb} == 0)" &
 # Imaging_TS.txt Output Control
 variable imagingFinish equal 0
 
+# Record Current Time-Step to File 
 print "${now}" screen no append post/start_rotating.txt
 
 # Obtain RPM, Times from Input File 'rpm_drum.txt' 

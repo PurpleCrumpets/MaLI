@@ -1,3 +1,3 @@
-cd MYLIGGGHTS/simulations/testShort2/
-lcd D:\output\11_nP_40_zoom_2
+cd MYLIGGGHTS/simulations/createRestart50_RESTART/
+lcd D:\output\createRestart50
 mput -r restart
