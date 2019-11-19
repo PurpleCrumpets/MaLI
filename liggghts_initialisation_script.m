@@ -276,14 +276,14 @@ if strcmpi(sim_type,'restart')
     
     % Check if restart file is compatible with configured settings
     disp('Checking restart file compatability with configured settings...')
-%     output = compareDataHead();
-    
-    % Read data.head of submitted settings. Obtain info on periodic, 2D/3D
-    % settings 
-    
-    
-    % Check selected restart directory for the correctly named file 
-    
+    restartdataHeadCheck = compareDataHead(path_input, pathRestart);
+    if restartdataHeadCheck == 1
+        disp(['Restart file compatible with selected simulation ',...
+            'settings...'])
+    else
+        disp('Initialisation failed...')
+        return
+    end
 end
 
 

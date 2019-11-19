@@ -9,6 +9,7 @@
 
 print "----> Opened imaging.data"
 label Imjump
+variable caliEnd equal ${caliStart}+${caliLength}
 
 # Check if No Imaging Command Given
 if "(${imaging} == 0)" then &
@@ -23,14 +24,13 @@ if "(${imaging} == 1)" then &
 
 # Check if Calibration Imaging Command Given
 if "(${imaging} == 2) && (${count} == ${caliStart})" then       & 
-	"variable imagingFinish equal 1" &
+	"variable imagingFinish equal 1"                        &
 	"print '${now}' screen no append images/imaging_ts.txt" &
 	"jump imaging.data Imstart"
 
 # End Calibration Imaging
 if "(${imaging} == 2) && (${count} == ${caliEnd})" then         & 
-	"variable caliStart     equal ${caliStart}+3"           &
-	"variable caliEnd       equal ${caliEnd}+3"             &
+	"variable caliStart     equal ${caliEnd}+${caliSkip}" &
 	"variable imagingFinish equal 1" &
 	"print '${now}' screen no append images/imaging_ts.txt" &
 	"undump dumpimageR1"                                    &

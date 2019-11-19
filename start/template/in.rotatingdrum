@@ -103,7 +103,7 @@ variable limit10 equal 0             # Min + y-direction (periodic boundary)
 region domain block -${limit1} ${limit1} &
 		    -${limit3} ${limit2} &
 	            -${limit1} ${limit1} units box # -x,+x,-y,+y,-z,+z (m)
-create_box 5 domain # 5 different material types (PP, GL, DW, DE1) 
+create_box 4 domain # 5 different material types (PP, GL, DW, DE1) 
 
 
 ################################################################################

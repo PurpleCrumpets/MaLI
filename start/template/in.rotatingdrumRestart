@@ -335,7 +335,7 @@ variable timeAccel1 equal ${timeAccel2}
 variable angVel1    equal ${angVel2}
 
 # Restart Loop
-jump in.rotatingdrum loop2
+jump in.rotatingdrumRestart loop2
 
 # End of Drum Rotation Loop
 label endloop2

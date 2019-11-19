@@ -4,7 +4,7 @@
 ################################################################################
 ## Simulation Settings
 ################################################################################
-variable simtype   string "i" # i = initialisation, r = restart
+variable simtype   string "r" # i = initialisation, r = restart
 variable queue     string "default" # Hypnos queue ("default" "long")
 variable walltime  string "200:00:00" # Max sim runtime (default = 200:00:00) 
 variable simdim     equal 2   # Simulation dimensions, 2D (2) or 3D (3)
@@ -16,9 +16,11 @@ variable xproc      equal 0   # x-direction processor layout (0 for auto-assign)
 variable yproc      equal 0   # y-direction processor layout (0 for auto-assign)
 variable zproc      equal 0   # z-direction processor layout (0 for auto-assign)
 variable produceVTK equal 1   # 0 = no VTK output, 1 yes VTK output saved
-variable imaging    equal 1   # 0 = none, 1 = rotating, 2 = calibration
+variable imaging    equal 2   # 0 = none, 1 = rotating, 2 = calibration
 variable caliStart  equal 3   # Loop count to start calibration imaging (-)
-variable caliEnd    equal 4   # Loop count to end calibration imaging (-)  
+variable caliLength equal 1   # Loop counts for calibration imaging (-) 
+variable caliSkip   equal 2   # Loops to skip before calibration imaging resumes
+
 
 # NOTE: The product of xproc, yproc, zproc should equal proc if autoproc 
 # is set to 0. Otherwise, the MATLAB input script will not be happy ;).
@@ -45,7 +47,7 @@ variable rotDirection  equal 0    # 0 = glass leading rot, 1 = PP leading rot
 variable insertionrate equal 2000  # (particles of one type/s)
 variable volfracGL     equal 0.5   # Volume fraction of glass in bed (-)
 variable volfracPP     equal 0.5   # Volume fraction of PP in bed    (-)
-variable fillingdegree equal 0.01 # Volume filling degree of drum   (-)
+variable fillingdegree equal 0.35  # Volume filling degree of drum   (-)
 variable porosity      equal 0.36  # Porosity of bed (0.36 = random packing) (-)
 
 
@@ -78,74 +80,56 @@ variable ymDE1          equal ${ymDW}# drum end w/o slit         (Pa)
 #variable ymDE2          equal 3.25e7 # drum end w slit 93.25e9)  (Pa)
 #-------------------------------------------------------------------------------
 # Poisson's Ratio
-variable prPP           equal 0.42   # Poisson's Ratio of PP    	    (-)
-variable prGL           equal 0.22   # Poisson's Ratio of glass 	    (-)
-variable prDW           equal 0.36   # Poisson's Ratio of drum wall  	    (-)
-variable prDE1          equal ${prDW}# Poisson's Ratio of drum end w/o slit (-)
+variable prPP           equal 0.42   # Poisson's Ratio of PP    	     (-)
+variable prGL           equal 0.22   # Poisson's Ratio of glass 	     (-)
+variable prDW           equal 0.36   # Poisson's Ratio of drum wall  	     (-)
+variable prDE1          equal ${prDW}# Poisson's Ratio of drum end w/o slit  (-)
 #variable prDE2          equal 0.4    # Poisson's Ratio of drum end w slit   (-)
 #-------------------------------------------------------------------------------
 # Coefficient of Restitution (CoR)
-variable CoR_PP_PP      equal 0.8000 # PP - PP                              (-)
-variable CoR_PP_GL      equal 0.8000 # PP - glass    		            (-)
-variable CoR_PP_DW      equal 0.8000 # PP - drum wall                       (-)
-variable CoR_PP_DE1     equal 0.8000 # PP - drum end w/o slit               (-)
-#variable CoR_PP_DE2     equal 0.8000 # PP - drum end w slit 	            (-)
+variable CoR_PP_PP      equal 0.8000 # PP - PP                               (-)
+variable CoR_PP_GL      equal 0.8000 # PP - glass    		             (-)
+variable CoR_PP_DW      equal 0.8000 # PP - drum wall                        (-)
+variable CoR_PP_DE1     equal 0.8000 # PP - drum end w/o slit                (-)
 
-variable CoR_GL_GL      equal 0.8000 # glass - glass 		            (-)
-variable CoR_GL_DW      equal 0.8000 # glass - drum wall                    (-)
-variable CoR_GL_DE1     equal 0.8000 # glass - drum end w/o slit            (-)
-#variable CoR_GL_DE2     equal 0.8000 # glass - drum end w slit              (-)
+variable CoR_GL_GL      equal 0.8000 # glass - glass 		             (-)
+variable CoR_GL_DW      equal 0.8000 # glass - drum wall                     (-)
+variable CoR_GL_DE1     equal 0.8000 # glass - drum end w/o slit             (-)
 
-variable CoR_DW_DW      equal 0.0501 # drum wall - drum wall                (-)
-variable CoR_DW_DE1     equal 0.0501 # drum wall - drum end w/o slit        (-)
-#variable CoR_DW_DE2     equal 0.0501 # drum wall - drum end w slit          (-)
+variable CoR_DW_DW      equal 0.0501 # drum wall - drum wall                 (-)
+variable CoR_DW_DE1     equal 0.0501 # drum wall - drum end w/o slit         (-)
 
-variable CoR_DE1_DE1    equal 0.0501 # drum end w/o slit - drum end w/o slit(-)
-#variable CoR_DE1_DE2    equal 0.0501 # drum end w/o slit - drum end w slit  (-)
-
-#variable CoR_DE2_DE2    equal 0.0501 # drum end w slit - drum end w slit    (-)
+variable CoR_DE1_DE1    equal 0.0501 # drum end w/o slit - drum end w/o slit (-)
 #-------------------------------------------------------------------------------
 # Coefficient of Friction (CoF)
-variable CoF_PP_PP     equal 0.9000 # PP - PP                              (-)
-variable CoF_PP_GL     equal 0.9000 # PP - glass		            (-)
-variable CoF_PP_DW     equal 0.9000 # PP - drum wall                       (-)
-variable CoF_PP_DE1    equal 0.9000 # PP - drum end w/o slit               (-)
-#variable CoF_PP_DE2    equal 0.9000 # PP - drum end w slit 	            (-)
+variable CoF_PP_PP     equal 0.9000 # PP - PP                                (-)
+variable CoF_PP_GL     equal 0.9000 # PP - glass		             (-)
+variable CoF_PP_DW     equal 0.9000 # PP - drum wall                         (-)
+variable CoF_PP_DE1    equal 0.9000 # PP - drum end w/o slit                 (-)
 
-variable CoF_GL_GL     equal 0.9000 # glass - glass 		            (-)
-variable CoF_GL_DW     equal 0.9000 # glass - drum wall                    (-)
-variable CoF_GL_DE1    equal 0.9000 # glass - drum end w/o slit            (-)
-#variable CoF_GL_DE2    equal 0.9000 # glass - drum end w slit              (-)
+variable CoF_GL_GL     equal 0.9000 # glass - glass 		             (-)
+variable CoF_GL_DW     equal 0.9000 # glass - drum wall                      (-)
+variable CoF_GL_DE1    equal 0.9000 # glass - drum end w/o slit              (-)
 
-variable CoF_DW_DW     equal 0      # drum wall - drum wall                (-)
-variable CoF_DW_DE1    equal 0      # drum wall - drum end w/o slit        (-)
-#variable CoF_DW_DE2    equal 0      # drum wall - drum end w slit          (-)
+variable CoF_DW_DW     equal 0      # drum wall - drum wall                  (-)
+variable CoF_DW_DE1    equal 0      # drum wall - drum end w/o slit          (-)
 
-variable CoF_DE1_DE1   equal 0      # drum end w/o slit - drum end w/o slit(-)
-#variable CoF_DE1_DE2   equal 0      # drum end w/o slit - drum end w slit  (-)
-
-#variable CoF_DE2_DE2   equal 0      # drum end w slit - drum end w slit    (-)
+variable CoF_DE1_DE1   equal 0      # drum end w/o slit - drum end w/o slit  (-)
 #-------------------------------------------------------------------------------
 # Coefficient of Rolling Friction (CoRF)
-variable CoRF_PP_PP     equal 0.0050 # PP - PP                              (-)
-variable CoRF_PP_GL     equal 0.0050 # PP - glass    		      	    (-)
-variable CoRF_PP_DW     equal 0.0050 # PP - drum wall                	    (-)
-variable CoRF_PP_DE1    equal 0.0050 # PP - drum end w/o slit        	    (-)
-#variable CoRF_PP_DE2    equal 0.0050 # PP - drum end w slit 	      	    (-)
+variable CoRF_PP_PP     equal 0.0050 # PP - PP                               (-)
+variable CoRF_PP_GL     equal 0.0050 # PP - glass    		      	     (-)
+variable CoRF_PP_DW     equal 0.0050 # PP - drum wall                	     (-)
+variable CoRF_PP_DE1    equal 0.0050 # PP - drum end w/o slit        	     (-)
 
-variable CoRF_GL_GL     equal 0.0050 # glass - glass 		      	    (-)
-variable CoRF_GL_DW     equal 0.0050 # glass - drum wall             	    (-)
-variable CoRF_GL_DE1    equal 0.0050 # glass - drum end w/o slit     	    (-)
-#variable CoRF_GL_DE2    equal 0.0050 # glass - drum end w slit       	    (-)
+variable CoRF_GL_GL     equal 0.0050 # glass - glass 		      	     (-)
+variable CoRF_GL_DW     equal 0.0050 # glass - drum wall             	     (-)
+variable CoRF_GL_DE1    equal 0.0050 # glass - drum end w/o slit     	     (-)
 
-variable CoRF_DW_DW     equal 0      # drum wall - drum wall         	    (-)
-variable CoRF_DW_DE1    equal 0      # drum wall - drum end w/o slit 	    (-)
-#variable CoRF_DW_DE2    equal 0      # drum wall - drum end w slit   	    (-)
+variable CoRF_DW_DW     equal 0      # drum wall - drum wall         	     (-)
+variable CoRF_DW_DE1    equal 0      # drum wall - drum end w/o slit 	     (-)
 
-variable CoRF_DE1_DE1   equal 0      # drum end w/o slit - drum end w/o slit(-)
-#variable CoRF_DE1_DE2   equal 0      # drum end w/o slit - drum end w slit  (-)
-
-#variable CoRF_DE2_DE2   equal 0      # drum end w slit - drum end w slit    (-)
+variable CoRF_DE1_DE1   equal 0      # drum end w/o slit - drum end w/o slit (-)
 
 
 ################################################################################

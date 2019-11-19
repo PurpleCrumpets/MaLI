@@ -1,3 +1,3 @@
-cd MYLIGGGHTS/simulations/createRestart50_RESTART/
-lcd D:\output\createRestart50
+cd MYLIGGGHTS/simulations/createRestart20RESTART/
+lcd D:\output\createRestart20
 mput -r restart

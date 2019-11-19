@@ -1,1 +1,3 @@
-cp ~/MYLIGGGHTS/src/lmp_auto ~/MYLIGGGHTS/simulations/2createRestart50
+cp ~/MYLIGGGHTS/src/lmp_auto ~/MYLIGGGHTS/simulations/createRestart20RESTART
+cd ~/MYLIGGGHTS/simulations/createRestart20RESTART/
+mv in.rotatingdrumRestart in.rotatingdrum
