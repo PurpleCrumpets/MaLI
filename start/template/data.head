@@ -15,8 +15,8 @@ variable autoproc   equal 1   # Auto set processor layout (yes = 1, no = 0)
 variable xproc      equal 0   # x-direction processor layout (0 for auto-assign)
 variable yproc      equal 0   # y-direction processor layout (0 for auto-assign)
 variable zproc      equal 0   # z-direction processor layout (0 for auto-assign)
-variable produceVTK equal 1   # 0 = no VTK output, 1 yes VTK output saved
-variable imaging    equal 2   # 0 = none, 1 = rotating, 2 = calibration
+variable produceVTK equal 0   # 0 = no VTK output, 1 yes VTK output saved
+variable imaging    equal 0   # 0 = none, 1 = rotating, 2 = calibration
 variable caliStart  equal 3   # Loop count to start calibration imaging (-)
 variable caliLength equal 1   # Loop counts for calibration imaging (-) 
 variable caliSkip   equal 2   # Loops to skip before calibration imaging resumes
@@ -30,7 +30,7 @@ variable caliSkip   equal 2   # Loops to skip before calibration imaging resumes
 ################################################################################ 
 ## DEM Parameters
 ################################################################################
-variable ts         equal 0.0000025  # Time-step size         (s)
+variable ts         equal 0.000004  # Time-step size         (s)
 variable neighdim   equal 0.004     # Size of neighbour list (m)
 variable thermostep equal 0.040     # Thermo time-step       (s)
 
@@ -47,7 +47,7 @@ variable rotDirection  equal 0    # 0 = glass leading rot, 1 = PP leading rot
 variable insertionrate equal 2000  # (particles of one type/s)
 variable volfracGL     equal 0.5   # Volume fraction of glass in bed (-)
 variable volfracPP     equal 0.5   # Volume fraction of PP in bed    (-)
-variable fillingdegree equal 0.35  # Volume filling degree of drum   (-)
+variable fillingdegree equal 0.20  # Volume filling degree of drum   (-)
 variable porosity      equal 0.36  # Porosity of bed (0.36 = random packing) (-)
 
 

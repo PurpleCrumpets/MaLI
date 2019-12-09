@@ -1,2 +1,2 @@
-cd ~/MYLIGGGHTS/simulations/createRestart20RESTART
+cd ~/MYLIGGGHTS/simulations/test
 test -e log.liggghts && echo 1 || echo 0

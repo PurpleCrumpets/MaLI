@@ -1,12 +1,12 @@
-cd ~/MYLIGGGHTS/simulations/createRestart20RESTART
+cd ~/MYLIGGGHTS/simulations/test
 chmod 755 job.script job2.script job3.script; sed -i 's/\r//g' job.script job2.script job3.script
-cd ~/MYLIGGGHTS/simulations/createRestart20RESTART
+cd ~/MYLIGGGHTS/simulations/test
 sed -i 's/ppn=0/ppn=4/' job.script
-sed -i 's/DEM/createRestart20RESTART/' job.script
+sed -i 's/DEM/test/' job.script
 sed -i 's/-np 0/-np 4/' job.script
 sed -i 's/00:00:00/200:00:00/' job.script
-sed -i 's/cd path/cd ~\/MYLIGGGHTS\/simulations\/createRestart20RESTART\//' job.script
+sed -i 's/cd path/cd ~\/MYLIGGGHTS\/simulations\/test\//' job.script
 sed -i 's/nodes=1/nodes=1/' job.script
 sed -i 's/-q default/-q default/' job.script
-sed -i 's/cd path/cd ~\/MYLIGGGHTS\/simulations\/createRestart20RESTART\//' job2.script
-sed -i 's/cd path/cd ~\/MYLIGGGHTS\/simulations\/createRestart20RESTART\//' job3.script
+sed -i 's/cd path/cd ~\/MYLIGGGHTS\/simulations\/test\//' job2.script
+sed -i 's/cd path/cd ~\/MYLIGGGHTS\/simulations\/test\//' job3.script

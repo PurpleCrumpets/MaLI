@@ -1,4 +1,4 @@
-cd MYLIGGGHTS/simulations/createRestart20RESTART/
+cd MYLIGGGHTS/simulations/test/
 lcd M:\fwdf\members\church70\MaLI\start\template
 mput -r meshes
 mput runscript postscript in.rotatingdrumRestart imaging.data data.head rpm_drum.txt

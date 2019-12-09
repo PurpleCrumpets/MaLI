@@ -24,10 +24,10 @@ include data.head
 print "----> Loading Restart File..."
 
 if "(${simdim} == 2) && (${periodicbb} == 1)" then &
-"read_restart restart/2D_periodic.restart" &
+"read_restart restart/END_2D_periodic.restart" &
 elif "(${simdim} == 2) && (${periodicbb} == 0)" &
-"read_restart restart/2D_non_periodic.restart" else &
-"read_restart restart/3D.restart"
+"read_restart restart/END_2D_non_periodic.restart" else &
+"read_restart restart/END_3D.restart"
 
 
 ################################################################################
@@ -213,13 +213,18 @@ thermo_modify	lost warn norm no flush yes
 variable omegaiter equal 0 # Initial rotational speed of drum (time-step = 1)
 print "${omegaiter}" screen no append post/drum_rotational_velocity.txt
 
-# Create Periodic Geometry/Particle/Image Dump
+
+# Create Periodic Geometry/Particle Dump if Set
+if "(${produceVTK} == 0)" then "jump in.rotatingdrum dumpstlskip5" # (5)
+ 
 if "(${simdim} == 2) && (${periodicbb} == 1)" then "print ''" else &
    "dump dumpstl8 all mesh/stl ${thermofreq} post/dump_ends_*.stl cad4 cad6"
 
 dump dumpstl7 all mesh/stl ${thermofreq} post/dump_drum_*.stl cad3
 dump dumpstl0 all custom/vtk ${thermofreq} post/particles_*.vtk &
 id type radius x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz
+
+label dumpstlskip5
 
 # Writing Drum Rotational Speed to File
 fix rotdrum all print ${thermofreq} "${omegaiter}" screen no &
@@ -335,7 +340,7 @@ variable timeAccel1 equal ${timeAccel2}
 variable angVel1    equal ${angVel2}
 
 # Restart Loop
-jump in.rotatingdrumRestart loop2
+jump in.rotatingdrum loop2
 
 # End of Drum Rotation Loop
 label endloop2

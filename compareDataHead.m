@@ -66,7 +66,7 @@ for i = 1:length(output)
 end
 
 if all(output)
-    disp('test')
+    
 else
     string = ['Incompatible restart file selected! Please check ',...
         'the following simulation settings in your data.head file:',...
