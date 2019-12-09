@@ -1,0 +1,78 @@
+## Imaging Information
+# Fixed camera viewing the rotation of the drum. No change in camera
+# angle during this period, constant zoom. The focus point is the centre of 
+# rotation.
+
+################################################################################
+# Imaging Command Preliminaries
+################################################################################
+
+print "----> Opened imaging.data"
+label Imjump
+variable caliEnd equal ${caliStart}+${caliLength}
+
+# Check if No Imaging Command Given
+if "(${imaging} == 0)" then &
+	"jump imaging.data endImjump"
+
+# Check if Rotation of Drum Imaging Command Given
+if "(${imaging} == 1)" then & 
+	"variable imaging       equal 0" &
+	"variable imagingFinish equal 1" &
+	"print '${now}' screen no append images/imaging_ts.txt" &
+	"jump imaging.data Imstart" 
+
+# Check if Calibration Imaging Command Given
+if "(${imaging} == 2) && (${count} == ${caliStart})" then       & 
+	"variable imagingFinish equal 1"                        &
+	"print '${now}' screen no append images/imaging_ts.txt" &
+	"jump imaging.data Imstart"
+
+# End Calibration Imaging
+if "(${imaging} == 2) && (${count} == ${caliEnd})" then         & 
+	"variable caliStart     equal ${caliEnd}+${caliSkip}" &
+	"variable imagingFinish equal 1" &
+	"print '${now}' screen no append images/imaging_ts.txt" &
+	"undump dumpimageR1"                                    &
+	"jump imaging.data endImjump"
+ 
+
+# Skip Imaging Commands
+jump imaging.data endImjump
+
+
+################################################################################
+# Start Imaging Commands
+################################################################################
+
+label Imstart
+
+# Drum Absolute Position
+variable drumPosXR1 equal 0                  # (metres)
+variable drumPosYR1 equal -(${lengthdrum}/2) # (metres)
+variable drumPosZR1 equal 0                  # (metres)
+
+# Camera Information
+variable thetaR1    equal 90  # (degrees)
+variable phiR1      equal 270 # (degrees)
+if "(${simdim} == 2)" then "variable zoomR1 equal 2.0" else &
+	"variable zoomR1 equal 4.6" # 2.2/4.6
+
+# Centre Using Current CS
+variable centreXR1 equal (${drumPosXR1}+${limit1})/(${limit1}+${limit1}) # (-) 
+variable centreYR1 equal (${drumPosYR1}+${limit7})/(${limit4}+${limit7}) # (-)
+variable centreZR1 equal (${drumPosZR1}+${limit1})/(${limit1}+${limit1}) # (-)
+
+# Imaging Command
+dump dumpimageR1 all image $(v_thermofreq) images/image_*.jpeg type type &
+	zoom ${zoomR1} size 1080 1080 view ${thetaR1} ${phiR1} &
+	center s ${centreXR1} ${centreYR1} ${centreZR1} shiny 0 box no 0.02
+dump_modify dumpimageR1 adiam 1 ${diaPP} adiam 2 ${diaGL} &
+	acolor 1 red acolor 2 white
+
+label endImjump
+
+
+################################################################################
+# End Imaging Command
+################################################################################
