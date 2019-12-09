@@ -1,6 +1,4 @@
-%% Title
-%
-% liggghts_initialisation_script.m
+%% liggghtsInitialisationScript.m
 %
 % Script to connect to Hypnos using SSH to run a LIGGHTS DEM simulation.
 % The simulation is periodically stopped and data stransferred to MATLAB by
@@ -8,7 +6,7 @@
 % 
 % Tim Churchfield
 %
-% Last Edited: 17/10/2019
+% Last Edited: 09/12/2019
 %
 %% Variable Dictionary
 
@@ -23,10 +21,9 @@ fclose('all');
 
 
 %% User Input Variables
-projectname = '';
-restartSource = '';
-tail = 'no';
-% tail = 'yes';
+projectname = '';   % 
+restartSource = ''; % ''/'useCurrentFile'/'projectNameforRestartFile'
+tail = 'no';        % 'yes'/'no'
 % restartSource= 'useCurrentFile'; % Use restart files in template dir
 
 
@@ -513,6 +510,10 @@ end
 
 
 %% Tailing Log File and Error Checking
+if exist('tail','var') == 0
+    tail = '';
+end
+
 if strcmpi(tail,'Y') || strcmpi(tail,'yes')
     % Looking for Errors Messages in log.liggghts
     disp('Looking for errors messages (see external Terminal)...');

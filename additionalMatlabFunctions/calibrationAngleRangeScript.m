@@ -1,13 +1,13 @@
 %% calibrationAngleRangeScript.m
 %
 % Script to obtain the output angles of repose, and their corresponding
-% interaction parameters from each simulation subdirectory from calbration
+% interaction parameters from each simulation subdirectory from calibration
 % using DEcalioc. A boxplot and line plot of the angles of repose are
 % produced. 
 % 
 % Tim Churchfield
 %
-% Last Edited: 02/12/2019
+% Last Edited: 09/12/2019
 %
 %% Variable Dictionary
 %

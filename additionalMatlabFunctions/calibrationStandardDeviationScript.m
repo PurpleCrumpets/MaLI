@@ -1,3 +1,14 @@
+%% calibrationStandardDeviationScript.m
+%
+% Script to obtain the arthmetic mean, geometric mean and median for
+% the output of the initial sampling of DEcalioc and produce the
+% corresponding figures.
+% 
+% Tim Churchfield
+%
+% Last Edited: 09/12/2019
+%
+
 
 
 

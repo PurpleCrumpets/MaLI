@@ -1,6 +1,4 @@
-%% Title
-%
-% liggghts_import_script.m
+%% liggghtsImportScript.m
 %
 % Script to download LIGGGHTS DEM project from the computing cluster. Once
 % the data is downloaded, any images found are converted from PPM to PNG to
@@ -8,7 +6,7 @@
 % 
 % Tim Churchfield
 %
-% Last Edited: 24/09/2019
+% Last Edited: 09/12/2019
 %
 %% Variable Dictionary
 
@@ -60,6 +58,10 @@ end
 
 
 %% Checking if vtk_num Input is Valid
+if exist('vtk_num','var') == 0
+    vtk_num = 'all';
+end
+
 if strcmpi(vtk_num,'all') || strcmpi(vtk_num,'rotating') ...
         || strcmpi(vtk_num,'both')
 else
@@ -71,6 +73,10 @@ end
 %% Checking if Hypnos Project Name Exists
 if exist('projectname','var') == 0
     projectname = '';
+end
+
+if exist('download','var') == 0
+    download = 'Yes';
 end
 
 if isempty(projectname) == 0

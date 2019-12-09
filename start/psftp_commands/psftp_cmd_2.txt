@@ -1,3 +1,3 @@
 cd MYLIGGGHTS/simulations/test/
-lcd D:\output\28_11_Restart20
+lcd D:\output\testCaliSkipNew
 mput -r restart

@@ -1,5 +1,14 @@
-
-
+%% findAngleDataScript.m
+%
+% Script to obtain the sample simulations in the initial calibration step
+% DEcalioc corresponding to the set of parameters defined for one of the 
+% sample simulations.
+% 
+% Tim Churchfield
+%
+% Last Edited: 09/12/2019
+%
+%% Prepare Workspace
 clc
 close all
 clear
@@ -7,8 +16,8 @@ fclose('all');
 
 
 %% User Input
-basis.path = 'D:\calibration\DEcaliocTest\DEcalioc\optim\rotatingdrum35\0001jpa_45752';
-optim.path = 'D:\calibration\DEcaliocTest\DEcalioc\optim\'; 
+basis.path = 'D:\calibration\DEcaliocTest\DEcalioc\optim\rotatingdrum35\0001jpa_45752'; % Path to target simulation
+optim.path = 'D:\calibration\DEcaliocTest\DEcalioc\optim\'; % Path to all calibration sample simulations
 
 
 %% Execution
@@ -42,6 +51,7 @@ for i = 1:length(optim.dir)
             
             % open angleRepose.txt file
             fd = fopen(fullfile(simName{k,1},'analysis',[listing(j).name, '_angleRepose.txt']),'r');
+            
             % Read file into cell A
             l = 1;
             tline = fgetl(fd);
